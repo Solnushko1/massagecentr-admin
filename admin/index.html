@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Админ-панель | Медицинский центр «8 за»</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #222; }
+
+  /* ── LOGIN ──────────────────────────────────────── */
+  #loginScreen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; background: linear-gradient(135deg, #8DC63F 0%, #00BCD4 100%);
+  }
+  .login-card {
+    background: #fff; border-radius: 16px; padding: 40px 36px;
+    width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
+  .login-logo { text-align: center; margin-bottom: 24px; }
+  .login-logo img { height: 70px; }
+  .login-logo h2 { color: #8DC63F; font-size: 18px; margin-top: 10px; }
+  .login-logo p { color: #888; font-size: 13px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+  .form-group input {
+    width: 100%; padding: 11px 14px; border: 1.5px solid #ddd;
+    border-radius: 8px; font-size: 15px; outline: none; transition: border .2s;
+  }
+  .form-group input:focus { border-color: #8DC63F; }
+  .btn-login {
+    width: 100%; padding: 13px; background: #8DC63F; color: #fff;
+    border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: background .2s; margin-top: 4px;
+  }
+  .btn-login:hover { background: #7ab52e; }
+  #loginError { color: #e53935; font-size: 13px; margin-top: 10px; text-align: center; }
+
+  /* ── LAYOUT ─────────────────────────────────────── */
+  #adminApp { display: none; }
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px; background: #1e2a1e; color: #fff;
+    display: flex; flex-direction: column; position: fixed;
+    top: 0; left: 0; height: 100vh; z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 20px 18px 14px; border-bottom: 1px solid #2e3d2e;
+  }
+  .sidebar-logo img { height: 44px; filter: brightness(1.1); }
+  .sidebar-logo p { color: #aaa; font-size: 11px; margin-top: 6px; }
+  .sidebar-nav { flex: 1; padding: 10px 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px; cursor: pointer; color: #bbb;
+    font-size: 14px; transition: all .18s; border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: #2a3d2a; color: #fff; }
+  .nav-item.active { background: #2a3d2a; color: #8DC63F; border-left-color: #8DC63F; }
+  .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
+  .sidebar-footer { padding: 14px 18px; border-top: 1px solid #2e3d2e; }
+  .admin-info { font-size: 12px; color: #888; margin-bottom: 10px; }
+  .admin-info span { color: #fff; display: block; font-size: 14px; }
+  .btn-logout {
+    width: 100%; padding: 9px; background: transparent; border: 1px solid #555;
+    color: #bbb; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all .2s;
+  }
+  .btn-logout:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+
+  /* Main */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+  .topbar {
+    background: #fff; padding: 16px 28px; display: flex;
+    align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 50;
+  }
+  .topbar h1 { font-size: 20px; color: #222; }
+  .topbar-badge {
+    background: #8DC63F; color: #fff; padding: 4px 14px;
+    border-radius: 20px; font-size: 12px;
+  }
+  .content { padding: 24px 28px; flex: 1; }
+
+  /* ── TABS ────────────────────────────────────────── */
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 20px;
+  }
+  .card-header {
+    padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-header h2 { font-size: 16px; color: #333; }
+  .card-body { padding: 20px; }
+
+  /* Buttons */
+  .btn {
+    padding: 8px 16px; border-radius: 7px; border: none;
+    cursor: pointer; font-size: 13px; font-weight: 600; transition: all .18s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: #8DC63F; color: #fff; }
+  .btn-primary:hover { background: #7ab52e; }
+  .btn-teal { background: #00BCD4; color: #fff; }
+  .btn-teal:hover { background: #0097a7; }
+  .btn-danger { background: #fff; color: #e53935; border: 1px solid #e53935; }
+  .btn-danger:hover { background: #e53935; color: #fff; }
+  .btn-edit { background: #fff; color: #1976D2; border: 1px solid #1976D2; }
+  .btn-edit:hover { background: #1976D2; color: #fff; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* News Grid */
+  .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; }
+  .news-card { border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
+  .news-card img { width: 100%; height: 150px; object-fit: cover; background: #f0f0f0; }
+  .news-card-body { padding: 12px; }
+  .news-card-body h3 { font-size: 14px; margin-bottom: 6px; }
+  .news-card-body p { font-size: 12px; color: #777; max-height: 40px; overflow: hidden; }
+  .news-card-date { font-size: 11px; color: #00BCD4; margin: 6px 0; }
+  .news-card-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+  /* Services Table */
+  .services-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .filter-btn {
+    padding: 6px 14px; border: 1.5px solid #ddd; border-radius: 20px;
+    background: #fff; cursor: pointer; font-size: 12px; transition: all .18s;
+  }
+  .filter-btn.active { border-color: #8DC63F; color: #8DC63F; background: #f1f8e9; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #f8f9fa; padding: 10px 14px; text-align: left; font-size: 13px; color: #555; border-bottom: 2px solid #eee; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+  tr:hover td { background: #fafff5; }
+  .price-badge { background: #f1f8e9; color: #5a8a1a; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; }
+  .category-badge { background: #e3f2fd; color: #1565c0; padding: 3px 8px; border-radius: 4px; font-size: 11px; }
+
+  /* Chat */
+  .chat-layout { display: flex; height: calc(100vh - 200px); min-height: 500px; }
+  .chat-users {
+    width: 260px; border-right: 1px solid #eee; overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .chat-user-item {
+    padding: 13px 16px; cursor: pointer; border-bottom: 1px solid #f0f0f0;
+    transition: background .15s;
+  }
+  .chat-user-item:hover { background: #f8fff8; }
+  .chat-user-item.active { background: #f1f8e9; border-left: 3px solid #8DC63F; }
+  .chat-user-name { font-size: 13px; font-weight: 600; }
+  .chat-user-phone { font-size: 11px; color: #888; margin-top: 2px; }
+  .chat-user-preview { font-size: 11px; color: #aaa; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-unread { background: #8DC63F; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; float: right; }
+  .chat-window { flex: 1; display: flex; flex-direction: column; }
+  .chat-header { padding: 12px 16px; border-bottom: 1px solid #eee; background: #fafff5; }
+  .chat-header strong { font-size: 14px; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 70%; padding: 9px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; }
+  .msg-client { background: #e8f5e9; align-self: flex-end; border-bottom-right-radius: 3px; }
+  .msg-admin { background: #e3f2fd; align-self: flex-start; border-bottom-left-radius: 3px; }
+  .msg-time { font-size: 10px; color: #aaa; margin-top: 3px; text-align: right; }
+  .msg-label { font-size: 10px; font-weight: 600; margin-bottom: 2px; }
+  .msg-admin .msg-label { color: #1565c0; }
+  .msg-client .msg-label { color: #388e3c; }
+  .chat-input-area { padding: 12px 16px; border-top: 1px solid #eee; display: flex; gap: 10px; }
+  .chat-input-area textarea {
+    flex: 1; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 8px;
+    font-size: 14px; resize: none; outline: none; font-family: inherit;
+  }
+  .chat-input-area textarea:focus { border-color: #00BCD4; }
+  .chat-placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 14px; }
+
+  /* Info form */
+  .info-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .info-form .form-group { margin-bottom: 16px; }
+  .info-form label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 600; }
+  .info-form input, .info-form textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid #ddd;
+    border-radius: 8px; font-size: 14px; outline: none; font-family: inherit;
+  }
+  .info-form input:focus, .info-form textarea:focus { border-color: #8DC63F; }
+  .info-form textarea { min-height: 80px; resize: vertical; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 14px; width: 520px; max-width: 95vw;
+    max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .modal-header {
+    padding: 18px 22px; border-bottom: 1px solid #eee;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 17px; }
+  .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #aaa; }
+  .modal-body { padding: 22px; }
+  .modal-body .form-group { margin-bottom: 14px; }
+  .modal-body label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; }
+  .modal-body input, .modal-body textarea, .modal-body select {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #ddd;
+    border-radius: 7px; font-size: 14px; outline: none; font-family: inherit;
+  }
+  .modal-body input:focus, .modal-body textarea:focus, .modal-body select:focus { border-color: #8DC63F; }
+  .modal-body textarea { min-height: 90px; resize: vertical; }
+  .modal-footer { padding: 14px 22px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* Stats */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .stat-num { font-size: 32px; font-weight: 700; color: #8DC63F; }
+  .stat-label { font-size: 13px; color: #888; margin-top: 4px; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; background: #323232; color: #fff;
+    padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 9999;
+    transform: translateY(80px); transition: transform .3s; opacity: 0;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { background: #388e3c; }
+  #toast.error { background: #c62828; }
+
+  .empty-state { text-align: center; color: #bbb; padding: 40px; font-size: 14px; }
+  .spinner { text-align: center; padding: 30px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="../app/src/main/res/drawable/logo.png" alt="Логотип"
+           onerror="this.style.display='none'">
+      <h2>Медицинский центр «8 за»</h2>
+      <p>Панель администратора</p>
+    </div>
+    <div class="form-group">
+      <label>Email администратора</label>
+      <input type="email" id="loginEmail" placeholder="admin@example.com">
+    </div>
+    <div class="form-group">
+      <label>Пароль</label>
+      <input type="password" id="loginPassword" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Войти</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     ADMIN APP
+═══════════════════════════════════════════════ -->
+<div id="adminApp">
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img src="../app/src/main/res/drawable/logo.png" alt="Логотип"
+             onerror="this.innerHTML='<strong style=color:#8DC63F>8ZA</strong>'">
+        <p>Панель администратора</p>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" onclick="showTab('dashboard')">
+          <span class="icon">📊</span> Главная
+        </div>
+        <div class="nav-item" onclick="showTab('news')">
+          <span class="icon">📰</span> Новости и акции
+        </div>
+        <div class="nav-item" onclick="showTab('services')">
+          <span class="icon">💰</span> Услуги и цены
+        </div>
+        <div class="nav-item" onclick="showTab('chat')">
+          <span class="icon">💬</span> Чат с клиентами
+          <span id="chatBadge" style="display:none;margin-left:auto;background:#e53935;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center;"></span>
+        </div>
+        <div class="nav-item" onclick="showTab('info')">
+          <span class="icon">ℹ️</span> Контактная информация
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="admin-info">
+          Вы вошли как<span id="adminEmail">—</span>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">Выйти</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="topbar">
+        <h1 id="topbarTitle">Главная</h1>
+        <span class="topbar-badge">Медицинский центр «8 за»</span>
+      </div>
+      <div class="content">
+
+        <!-- ── DASHBOARD ──────────────────────────── -->
+        <div id="tab-dashboard" class="tab active">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-num" id="statNews">—</div>
+              <div class="stat-label">📰 Новостей</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num" id="statServices">—</div>
+              <div class="stat-label">💰 Услуг</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num" id="statChats">—</div>
+              <div class="stat-label">💬 Клиентов в чате</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num" id="statUsers">—</div>
+              <div class="stat-label">👥 Пользователей</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h2>Быстрые действия</h2></div>
+            <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="showTab('news');openNewsModal()">＋ Добавить новость</button>
+              <button class="btn btn-teal" onclick="showTab('services');openServiceModal()">＋ Добавить услугу</button>
+              <button class="btn btn-edit" onclick="showTab('chat')">💬 Открыть чат</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── NEWS ─────────────────────────────────── -->
+        <div id="tab-news" class="tab">
+          <div class="card">
+            <div class="card-header">
+              <h2>Новости и акции</h2>
+              <button class="btn btn-primary" onclick="openNewsModal()">＋ Добавить</button>
+            </div>
+            <div class="card-body">
+              <div id="newsList" class="news-grid"><div class="spinner">Загрузка…</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SERVICES ──────────────────────────────── -->
+        <div id="tab-services" class="tab">
+          <div class="card">
+            <div class="card-header">
+              <h2>Услуги и цены</h2>
+              <button class="btn btn-primary" onclick="openServiceModal()">＋ Добавить услугу</button>
+            </div>
+            <div class="card-body">
+              <div class="services-filter" id="serviceFilters">
+                <button class="filter-btn active" onclick="filterServices('all',this)">Все</button>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Название</th>
+                    <th>Категория</th>
+                    <th>Длительность</th>
+                    <th>Цена</th>
+                    <th>Действия</th>
+                  </tr>
+                </thead>
+                <tbody id="servicesList"><tr><td colspan="5" class="spinner">Загрузка…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── CHAT ──────────────────────────────────── -->
+        <div id="tab-chat" class="tab">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="chat-layout">
+              <div class="chat-users" id="chatUsersList">
+                <div class="spinner">Загрузка…</div>
+              </div>
+              <div class="chat-window" id="chatWindow">
+                <div class="chat-placeholder">← Выберите клиента из списка</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── INFO ──────────────────────────────────── -->
+        <div id="tab-info" class="tab">
+          <div class="card">
+            <div class="card-header"><h2>Контактная информация</h2></div>
+            <div class="card-body">
+              <div class="info-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Телефон 1</label>
+                    <input type="text" id="infoPhone1" placeholder="+7 (930) 754-02-04">
+                  </div>
+                  <div class="form-group">
+                    <label>Телефон 2</label>
+                    <input type="text" id="infoPhone2" placeholder="+7 (4842) 40-02-04">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="infoEmail" placeholder="kaluga.8za@gmail.com">
+                  </div>
+                  <div class="form-group">
+                    <label>Адрес</label>
+                    <input type="text" id="infoAddress" placeholder="г. Калуга, ул. Ленина, д. 1">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Часы работы</label>
+                  <textarea id="infoHours" placeholder="Пн–Чт: 10:00–19:00&#10;Пт–Сб: выходной&#10;Вс: 10:00–19:00"></textarea>
+                </div>
+                <div class="form-group">
+                  <label>Описание / О центре</label>
+                  <textarea id="infoAbout" placeholder="Краткое описание центра…"></textarea>
+                </div>
+                <button class="btn btn-primary" style="width:100%;padding:12px" onclick="saveInfo()">
+                  💾 Сохранить изменения
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main -->
+  </div><!-- /layout -->
+</div><!-- /adminApp -->
+
+<!-- ═══════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════ -->
+
+<!-- News Modal -->
+<div class="modal-overlay" id="newsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="newsModalTitle">Добавить новость</h3>
+      <button class="modal-close" onclick="closeModal('newsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="newsEditId">
+      <div class="form-group">
+        <label>Заголовок *</label>
+        <input type="text" id="newsTitle" placeholder="Например: Новая акция на массаж">
+      </div>
+      <div class="form-group">
+        <label>Текст новости *</label>
+        <textarea id="newsBody" placeholder="Подробное описание…" style="min-height:120px"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Ссылка на изображение (URL)</label>
+        <input type="url" id="newsImageUrl" placeholder="https://…/photo.jpg">
+      </div>
+      <div class="form-group">
+        <label>Дата публикации</label>
+        <input type="date" id="newsDate">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="closeModal('newsModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveNews()">💾 Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Service Modal -->
+<div class="modal-overlay" id="serviceModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="serviceModalTitle">Добавить услугу</h3>
+      <button class="modal-close" onclick="closeModal('serviceModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="serviceEditId">
+      <div class="form-group">
+        <label>Название услуги *</label>
+        <input type="text" id="serviceName" placeholder="Например: Общий классический массаж">
+      </div>
+      <div class="form-group">
+        <label>Категория *</label>
+        <select id="serviceCategory">
+          <option value="Приём врача-терапевта">Приём врача-терапевта</option>
+          <option value="Массаж взрослый">Массаж взрослый</option>
+          <option value="Детский массаж">Детский массаж</option>
+          <option value="Коррекция фигуры">Коррекция фигуры</option>
+          <option value="Выезд на дом">Выезд на дом</option>
+          <option value="Дополнительные услуги">Дополнительные услуги</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label>Цена</label>
+          <input type="text" id="servicePrice" placeholder="1600 ₽">
+        </div>
+        <div class="form-group">
+          <label>Длительность</label>
+          <input type="text" id="serviceDuration" placeholder="60 мин">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="closeModal('serviceModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveService()">💾 Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="width:380px">
+    <div class="modal-header"><h3>Подтверждение удаления</h3></div>
+    <div class="modal-body"><p id="confirmText" style="font-size:15px;color:#555"></p></div>
+    <div class="modal-footer">
+      <button class="btn btn-edit" onclick="closeModal('confirmModal')">Отмена</button>
+      <button class="btn btn-danger" id="confirmBtn">🗑 Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+// ── Firebase Config ─────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyBBVV95bvyjbpYDtkKgmsG9gR1_qAK8-_0",
+  authDomain:        "massage-centr.firebaseapp.com",
+  projectId:         "massage-centr",
+  storageBucket:     "massage-centr.firebasestorage.app",
+  messagingSenderId: "713553411914",
+  appId:             "1:713553411914:android:f78ac0c3138743c2678bb3"
+};
+firebase.initializeApp(firebaseConfig);
+const db   = firebase.firestore();
+const auth = firebase.auth();
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display   = 'block';
+    document.getElementById('adminEmail').textContent   = user.email;
+    onAdminReady();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminApp').style.display   = 'none';
+  }
+});
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  auth.signInWithEmailAndPassword(email, pass).catch(e => {
+    const msgs = {
+      'auth/user-not-found':   'Пользователь не найден.',
+      'auth/wrong-password':   'Неверный пароль.',
+      'auth/invalid-email':    'Неверный формат email.',
+      'auth/too-many-requests':'Слишком много попыток. Попробуйте позже.',
+    };
+    errEl.textContent = msgs[e.code] || ('Ошибка: ' + e.message);
+  });
+}
+
+function doLogout() {
+  auth.signOut();
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+function onAdminReady() {
+  loadDashboard();
+  loadNews();
+  loadServices();
+  loadChatUsers();
+  loadInfo();
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+const tabTitles = {
+  dashboard: 'Главная',
+  news:      'Новости и акции',
+  services:  'Услуги и цены',
+  chat:      'Чат с клиентами',
+  info:      'Контактная информация'
+};
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.trim().toLowerCase().includes(
+        tabTitles[name].toLowerCase().split(' ')[0].toLowerCase()
+    )) n.classList.add('active');
+  });
+  document.getElementById('topbarTitle').textContent = tabTitles[name] || name;
+  if (name === 'news')     loadNews();
+  if (name === 'services') loadServices();
+  if (name === 'chat')     loadChatUsers();
+  if (name === 'info')     loadInfo();
+}
+
+// ── Dashboard Stats ──────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [news, svc, chats, users] = await Promise.all([
+      db.collection('news').get(),
+      db.collection('services').get(),
+      db.collection('chats').get(),
+      db.collection('users').get(),
+    ]);
+    document.getElementById('statNews').textContent     = news.size;
+    document.getElementById('statServices').textContent = svc.size;
+    document.getElementById('statChats').textContent    = chats.size;
+    document.getElementById('statUsers').textContent    = users.size;
+  } catch(e) { console.warn('Stats error:', e); }
+}
+
+// ── NEWS ─────────────────────────────────────────────────────────────────────
+let allNews = [];
+
+function loadNews() {
+  db.collection('news').orderBy('date', 'desc').onSnapshot(snap => {
+    allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderNews(allNews);
+    document.getElementById('statNews').textContent = allNews.length;
+  });
+}
+
+function renderNews(items) {
+  const el = document.getElementById('newsList');
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state">Новостей пока нет. Добавьте первую!</div>';
+    return;
+  }
+  el.innerHTML = items.map(n => {
+    const date = n.date ? new Date(n.date.seconds * 1000).toLocaleDateString('ru-RU') : '';
+    const img  = n.imageUrl ? `<img src="${n.imageUrl}" onerror="this.style.display='none'">` : '';
+    return `
+      <div class="news-card">
+        ${img}
+        <div class="news-card-body">
+          <h3>${esc(n.title)}</h3>
+          <div class="news-card-date">📅 ${date}</div>
+          <p>${esc(n.body)}</p>
+          <div class="news-card-actions">
+            <button class="btn btn-edit btn-sm" onclick="openNewsModal('${n.id}')">✏️ Изменить</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete('news','${n.id}','${esc(n.title)}')">🗑</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openNewsModal(id) {
+  document.getElementById('newsEditId').value = id || '';
+  document.getElementById('newsModalTitle').textContent = id ? 'Редактировать новость' : 'Добавить новость';
+  if (id) {
+    const n = allNews.find(x => x.id === id);
+    if (n) {
+      document.getElementById('newsTitle').value    = n.title || '';
+      document.getElementById('newsBody').value     = n.body  || '';
+      document.getElementById('newsImageUrl').value = n.imageUrl || '';
+      const d = n.date ? new Date(n.date.seconds * 1000) : new Date();
+      document.getElementById('newsDate').value = d.toISOString().split('T')[0];
+    }
+  } else {
+    document.getElementById('newsTitle').value    = '';
+    document.getElementById('newsBody').value     = '';
+    document.getElementById('newsImageUrl').value = '';
+    document.getElementById('newsDate').value     = new Date().toISOString().split('T')[0];
+  }
+  openModal('newsModal');
+}
+
+async function saveNews() {
+  const title    = document.getElementById('newsTitle').value.trim();
+  const body     = document.getElementById('newsBody').value.trim();
+  const imageUrl = document.getElementById('newsImageUrl').value.trim();
+  const dateStr  = document.getElementById('newsDate').value;
+  const editId   = document.getElementById('newsEditId').value;
+  if (!title || !body) { toast('Заполните заголовок и текст', 'error'); return; }
+  const data = {
+    title, body, imageUrl,
+    date: firebase.firestore.Timestamp.fromDate(new Date(dateStr || Date.now()))
+  };
+  try {
+    if (editId) await db.collection('news').doc(editId).update(data);
+    else        await db.collection('news').add(data);
+    closeModal('newsModal');
+    toast(editId ? 'Новость обновлена' : 'Новость добавлена', 'success');
+  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+}
+
+// ── SERVICES ─────────────────────────────────────────────────────────────────
+let allServices    = [];
+let currentFilter  = 'all';
+
+function loadServices() {
+  db.collection('services').orderBy('category').onSnapshot(snap => {
+    allServices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderServiceFilters();
+    renderServices();
+    document.getElementById('statServices').textContent = allServices.length;
+  });
+}
+
+function renderServiceFilters() {
+  const cats = [...new Set(allServices.map(s => s.category))].sort();
+  const el   = document.getElementById('serviceFilters');
+  el.innerHTML = `<button class="filter-btn ${currentFilter==='all'?'active':''}" onclick="filterServices('all',this)">Все (${allServices.length})</button>` +
+    cats.map(c => {
+      const cnt = allServices.filter(s => s.category === c).length;
+      return `<button class="filter-btn ${currentFilter===c?'active':''}" onclick="filterServices('${c}',this)">${c} (${cnt})</button>`;
+    }).join('');
+}
+
+function filterServices(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderServices();
+}
+
+function renderServices() {
+  const filtered = currentFilter === 'all' ? allServices : allServices.filter(s => s.category === currentFilter);
+  const tbody    = document.getElementById('servicesList');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Услуги не найдены</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(s => `
+    <tr>
+      <td>${esc(s.name)}</td>
+      <td><span class="category-badge">${esc(s.category)}</span></td>
+      <td>${esc(s.duration)}</td>
+      <td><span class="price-badge">${esc(s.price)}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-edit btn-sm" onclick="openServiceModal('${s.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDelete('services','${s.id}','${esc(s.name)}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openServiceModal(id) {
+  document.getElementById('serviceEditId').value = id || '';
+  document.getElementById('serviceModalTitle').textContent = id ? 'Редактировать услугу' : 'Добавить услугу';
+  if (id) {
+    const s = allServices.find(x => x.id === id);
+    if (s) {
+      document.getElementById('serviceName').value     = s.name     || '';
+      document.getElementById('servicePrice').value    = s.price    || '';
+      document.getElementById('serviceDuration').value = s.duration || '';
+      document.getElementById('serviceCategory').value = s.category || '';
+    }
+  } else {
+    document.getElementById('serviceName').value     = '';
+    document.getElementById('servicePrice').value    = '';
+    document.getElementById('serviceDuration').value = '';
+  }
+  openModal('serviceModal');
+}
+
+async function saveService() {
+  const name     = document.getElementById('serviceName').value.trim();
+  const price    = document.getElementById('servicePrice').value.trim();
+  const duration = document.getElementById('serviceDuration').value.trim();
+  const category = document.getElementById('serviceCategory').value;
+  const editId   = document.getElementById('serviceEditId').value;
+  if (!name) { toast('Введите название', 'error'); return; }
+  const data = { name, price, duration, category };
+  try {
+    if (editId) await db.collection('services').doc(editId).update(data);
+    else        await db.collection('services').add(data);
+    closeModal('serviceModal');
+    toast(editId ? 'Услуга обновлена' : 'Услуга добавлена', 'success');
+  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+}
+
+// ── CHAT ─────────────────────────────────────────────────────────────────────
+let chatUsers  = [];
+let activeUser = null;
+let chatUnsub  = null;
+
+function loadChatUsers() {
+  db.collection('chats').onSnapshot(async snap => {
+    const userPromises = snap.docs.map(async doc => {
+      const uid      = doc.id;
+      const msgs     = await db.collection('chats').doc(uid).collection('messages')
+                         .orderBy('timestamp','desc').limit(1).get();
+      const lastMsg  = msgs.docs[0]?.data();
+      const userDoc  = await db.collection('users').doc(uid).get().catch(() => null);
+      const userData = userDoc?.data();
+      return { uid, name: userData?.name || 'Клиент', phone: userData?.phoneNumber || uid,
+               lastText: lastMsg?.text || '', lastTime: lastMsg?.timestamp };
+    });
+    chatUsers = await Promise.all(userPromises);
+    chatUsers.sort((a,b) => (b.lastTime?.seconds||0) - (a.lastTime?.seconds||0));
+    renderChatUsers();
+    document.getElementById('statChats').textContent = chatUsers.length;
+  });
+}
+
+function renderChatUsers() {
+  const el = document.getElementById('chatUsersList');
+  if (!chatUsers.length) {
+    el.innerHTML = '<div class="empty-state" style="font-size:12px;padding:20px">Нет сообщений от клиентов</div>';
+    return;
+  }
+  el.innerHTML = chatUsers.map(u => `
+    <div class="chat-user-item ${activeUser===u.uid?'active':''}" onclick="openChat('${u.uid}','${esc(u.name)}','${esc(u.phone)}')">
+      <div class="chat-user-name">${esc(u.name)}</div>
+      <div class="chat-user-phone">${esc(u.phone)}</div>
+      <div class="chat-user-preview">${esc(u.lastText)}</div>
+    </div>`).join('');
+}
+
+function openChat(uid, name, phone) {
+  activeUser = uid;
+  renderChatUsers();
+  if (chatUnsub) chatUnsub();
+  document.getElementById('chatWindow').innerHTML = `
+    <div class="chat-header">
+      <strong>${esc(name)}</strong>
+      <div style="font-size:12px;color:#888">${esc(phone)}</div>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+      <textarea id="chatReplyText" placeholder="Введите ответ клиенту…" rows="2"
+        onkeydown="if(event.ctrlKey&&event.key==='Enter')sendAdminReply('${uid}')"></textarea>
+      <button class="btn btn-teal" onclick="sendAdminReply('${uid}')">➤ Отправить</button>
+    </div>`;
+  chatUnsub = db.collection('chats').doc(uid).collection('messages')
+    .orderBy('timestamp').onSnapshot(snap => {
+      const el = document.getElementById('chatMessages');
+      if (!el) return;
+      el.innerHTML = snap.docs.map(d => {
+        const m    = d.data();
+        const time = m.timestamp ? new Date(m.timestamp.seconds*1000).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) : '';
+        const isAdmin = m.role === 'admin';
+        return `
+          <div class="msg ${isAdmin?'msg-admin':'msg-client'}">
+            <div class="msg-label">${isAdmin?'Администратор':'Клиент'}</div>
+            ${esc(m.text)}
+            <div class="msg-time">${time}</div>
+          </div>`;
+      }).join('');
+      el.scrollTop = el.scrollHeight;
+    });
+}
+
+async function sendAdminReply(uid) {
+  const ta   = document.getElementById('chatReplyText');
+  const text = ta.value.trim();
+  if (!text) return;
+  try {
+    await db.collection('chats').doc(uid).collection('messages').add({
+      text, role: 'admin',
+      senderId:  auth.currentUser?.uid || 'admin',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    ta.value = '';
+  } catch(e) { toast('Ошибка отправки: ' + e.message, 'error'); }
+}
+
+// ── INFO ─────────────────────────────────────────────────────────────────────
+function loadInfo() {
+  db.collection('app_settings').doc('contact').get().then(doc => {
+    if (doc.exists) {
+      const d = doc.data();
+      document.getElementById('infoPhone1').value   = d.phone1   || '';
+      document.getElementById('infoPhone2').value   = d.phone2   || '';
+      document.getElementById('infoEmail').value    = d.email    || '';
+      document.getElementById('infoAddress').value  = d.address  || '';
+      document.getElementById('infoHours').value    = d.hours    || '';
+      document.getElementById('infoAbout').value    = d.about    || '';
+    } else {
+      // Defaults from the app
+      document.getElementById('infoPhone1').value  = '+7 (930) 754-02-04';
+      document.getElementById('infoPhone2').value  = '+7 (4842) 40-02-04';
+      document.getElementById('infoEmail').value   = 'kaluga.8za@gmail.com';
+      document.getElementById('infoAddress').value = 'г. Калуга, ул. Ленина, д. 1';
+      document.getElementById('infoHours').value   = 'Пн–Чт: 10:00–19:00\nПт–Сб: выходной\nВс: 10:00–19:00';
+    }
+  });
+}
+
+async function saveInfo() {
+  const data = {
+    phone1:  document.getElementById('infoPhone1').value.trim(),
+    phone2:  document.getElementById('infoPhone2').value.trim(),
+    email:   document.getElementById('infoEmail').value.trim(),
+    address: document.getElementById('infoAddress').value.trim(),
+    hours:   document.getElementById('infoHours').value.trim(),
+    about:   document.getElementById('infoAbout').value.trim(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await db.collection('app_settings').doc('contact').set(data);
+    toast('Информация сохранена! Обновится в приложении.', 'success');
+  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+}
+
+// ── DELETE ─────────────────────────────────────────────────────────────────
+function confirmDelete(collection, id, name) {
+  document.getElementById('confirmText').textContent = `Удалить «${name}»? Это действие нельзя отменить.`;
+  document.getElementById('confirmBtn').onclick = async () => {
+    try {
+      await db.collection(collection).doc(id).delete();
+      closeModal('confirmModal');
+      toast('Удалено', 'success');
+    } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+  };
+  openModal('confirmModal');
+}
+
+// ── Modal helpers ─────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = type ? `show ${type}` : 'show';
+  setTimeout(() => { el.className = ''; }, 3000);
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
