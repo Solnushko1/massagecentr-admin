@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_auth"
+    app:startDestination="@id/phoneAuthFragment">
+
+    <fragment
+        android:id="@+id/phoneAuthFragment"
+        android:name="com.example.massagecentr.auth.PhoneAuthFragment"
+        android:label="@string/phone_auth_title">
+        <action
+            android:id="@+id/action_phoneAuth_to_nameRegistration"
+            app:destination="@id/nameRegistrationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nameRegistrationFragment"
+        android:name="com.example.massagecentr.auth.NameRegistrationFragment"
+        android:label="@string/registration_title" />
+
+</navigation>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "713553411914",
+    "project_id": "massage-centr",
+    "storage_bucket": "massage-centr.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713553411914:android:f78ac0c3138743c2678bb3",
+        "android_client_info": {
+          "package_name": "com.example.massagecentr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBVV95bvyjbpYDtkKgmsG9gR1_qAK8-_0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,57 @@
+<resources>
+    <string name="app_name">Массажный центр</string>
+
+    <!-- Auth -->
+    <string name="phone_auth_title">Вход по номеру телефона</string>
+    <string name="phone_auth_hint">Введите номер в формате +7XXXXXXXXXX</string>
+    <string name="phone_hint">Номер телефона</string>
+    <string name="phone_placeholder">+79001234567</string>
+    <string name="get_code">Получить код</string>
+    <string name="sms_code_hint">Код из SMS</string>
+    <string name="verify_code">Войти</string>
+    <string name="resend_code">Не пришёл код? Отправить ещё раз</string>
+    <string name="registration_title">Регистрация</string>
+    <string name="name_hint">Ваше имя</string>
+    <string name="name_placeholder">Иван Иванов</string>
+    <string name="register_btn">Зарегистрироваться</string>
+
+    <!-- Bottom Nav -->
+    <string name="nav_home">Главная</string>
+    <string name="nav_services">Услуги</string>
+    <string name="nav_info">Контакты</string>
+    <string name="nav_chat">Чат</string>
+
+    <!-- Clinic branding -->
+    <string name="clinic_name">Медицинский центр «8 за»</string>
+    <string name="clinic_tagline">Лечение с индивидуальным подходом для каждого</string>
+    <string name="clinic_city">г. Калуга, ул. Ленина, д. 1</string>
+
+    <!-- Home -->
+    <string name="home_title">Главная</string>
+    <string name="news_section">Новости и акции</string>
+    <string name="no_news">Нет новостей</string>
+
+    <!-- Services -->
+    <string name="services_title">Услуги</string>
+    <string name="price_rub">%s руб.</string>
+    <string name="duration_min">%s мин.</string>
+
+    <!-- Info -->
+    <string name="info_title">Контакты</string>
+    <string name="contacts_title">Контакты</string>
+    <string name="phone1">+7 (930) 754-02-04</string>
+    <string name="phone2">+7 (4842) 40-02-04</string>
+    <string name="email">kaluga.8za@gmail.com</string>
+    <string name="call">Позвонить</string>
+    <string name="address_title">Адрес</string>
+    <string name="address">г. Калуга, ул. Ленина, д. 1\nВход со стороны улицы</string>
+    <string name="open_map">Открыть на карте</string>
+    <string name="hours_title">Часы работы</string>
+    <string name="hours">Пн–Чт: 10:00 – 19:00\nПт–Сб: выходной\nВс: 10:00 – 19:00</string>
+
+    <!-- Chat -->
+    <string name="chat_title">Чат</string>
+    <string name="message_hint">Введите сообщение…</string>
+    <string name="send">Отправить</string>
+    <string name="chat_empty">Напишите нам — мы ответим!</string>
+</resources>

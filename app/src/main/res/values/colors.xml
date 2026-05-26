@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Цвета из логотипа клиники «8 за» -->
+    <color name="primary">#8DC63F</color>
+    <color name="primary_dark">#689F38</color>
+    <color name="accent">#00BCD4</color>
+    <color name="background">#F7FAF5</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="divider">#E0E0E0</color>
+    <color name="bubble_client">#8DC63F</color>
+    <color name="bubble_admin">#FFFFFF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="primary_container">#F1F8E9</color>
+    <color name="error">#D32F2F</color>
+    <color name="teal">#00BCD4</color>
+</resources>
