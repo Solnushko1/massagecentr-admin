@@ -56,28 +56,32 @@ module.exports = async function handler(req, res) {
   });
 
   try {
+    const msgId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@massagecentr.app>`;
     await transporter.sendMail({
-      from: `"Медцентр «8 за»" <${process.env.GMAIL_USER}>`,
+      from: `"Med Center 8za" <${process.env.GMAIL_USER}>`,
+      replyTo: process.env.GMAIL_USER,
       to: email,
-      subject: "Код для входа — Медицинский центр «8 за»",
-      text: `Ваш код подтверждения: ${otp}\n\nКод действителен 5 минут.\nЕсли вы не запрашивали этот код — проигнорируйте письмо.`,
+      subject: `Код подтверждения: ${otp}`,
+      messageId: msgId,
+      headers: {
+        "X-Mailer": "MassageCentr App",
+        "X-Priority": "1",
+        "Precedence": "transactional",
+      },
+      text: `Ваш код для входа в приложение: ${otp}\n\nКод действителен 5 минут.\nЕсли вы не запрашивали этот код — проигнорируйте это письмо.`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 420px; margin: 0 auto;">
-          <div style="background:#8DC63F; padding:16px 24px; border-radius:8px 8px 0 0;">
-            <h2 style="color:#fff; margin:0; font-size:18px;">Медицинский центр «8 за»</h2>
-          </div>
-          <div style="background:#f9f9f9; padding:24px; border-radius:0 0 8px 8px; border:1px solid #e0e0e0;">
-            <p style="color:#333; margin-top:0;">Ваш код для входа в приложение:</p>
-            <div style="font-size:38px; font-weight:bold; letter-spacing:10px; color:#333; background:#fff;
-                        border:2px solid #8DC63F; border-radius:8px; padding:12px; text-align:center; margin:16px 0;">
-              ${otp}
-            </div>
-            <p style="color:#666; font-size:13px;">Код действителен <strong>5 минут</strong>.</p>
-            <p style="color:#999; font-size:12px; margin-bottom:0;">
-              Если вы не запрашивали этот код — просто проигнорируйте письмо.
-            </p>
-          </div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+          <tr><td style="padding:16px 0;border-bottom:2px solid #8DC63F;">
+            <span style="font-size:17px;font-weight:bold;color:#333;">Медицинский центр «8 за»</span>
+          </td></tr>
+          <tr><td style="padding:20px 0 8px;">
+            <p style="margin:0 0 12px;color:#333;font-size:15px;">Ваш код для входа:</p>
+            <p style="margin:0;font-size:36px;font-weight:bold;letter-spacing:8px;color:#222;background:#f5f5f5;
+                      border-radius:6px;padding:10px 16px;display:inline-block;">${otp}</p>
+            <p style="margin:16px 0 0;color:#666;font-size:13px;">Код действителен 5 минут.</p>
+            <p style="margin:8px 0 0;color:#999;font-size:12px;">Если вы не запрашивали этот код — проигнорируйте письмо.</p>
+          </td></tr>
+        </table>
       `,
     });
 

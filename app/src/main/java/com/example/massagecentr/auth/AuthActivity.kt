@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.fragment.NavHostFragment
+import com.example.massagecentr.MassageCentrApp
 import com.example.massagecentr.R
 import com.example.massagecentr.databinding.ActivityAuthBinding
 import com.example.massagecentr.main.MainActivity
@@ -21,13 +21,16 @@ class AuthActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser != null) {
-            // Анонимная сессия сохранена на устройстве → проверяем профиль
-            viewModel.checkUser(currentUser.uid, "")
+        val emailKey = MassageCentrApp.session.emailKey
+
+        if (currentUser != null && emailKey.isNotBlank()) {
+            // Сессия сохранена — проверяем профиль по emailKey
+            viewModel.checkUser(emailKey)
             viewModel.state.observe(this) { state ->
                 if (state is AuthState.LoggedIn) openMain()
             }
         }
+        // Если emailKey пустой — показываем экран авторизации (навигация уже настроена в XML)
     }
 
     fun openMain() {

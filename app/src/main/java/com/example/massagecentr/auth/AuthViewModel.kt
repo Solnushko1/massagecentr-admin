@@ -5,8 +5,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.massagecentr.MassageCentrApp
+import com.example.massagecentr.SessionManager
 import com.example.massagecentr.data.UserRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -27,6 +30,7 @@ sealed class AuthState {
 class AuthViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
     private val userRepository = UserRepository()
 
     private val _state = MutableLiveData<AuthState>(AuthState.Idle)
@@ -34,15 +38,12 @@ class AuthViewModel : ViewModel() {
 
     private var lastEmail: String = ""
 
-    // ── URL Vercel API ──────────────────────────────────────────────────────────
-    // После деплоя на Vercel замени на свой URL (см. README)
     companion object {
         const val API_BASE = "https://massagecentr-admin.vercel.app"
     }
-    // ───────────────────────────────────────────────────────────────────────────
 
     fun initCallbacks() {
-        // Совместимость с PhoneAuthFragment — не требует инициализации
+        // Совместимость с PhoneAuthFragment
     }
 
     /** Запрашивает OTP-код на email через Vercel/Nodemailer */
@@ -69,7 +70,7 @@ class AuthViewModel : ViewModel() {
         if (lastEmail.isNotBlank()) sendCode(lastEmail, activity as Activity)
     }
 
-    /** Проверяет код и выполняет анонимный вход в Firebase для сессии */
+    /** Проверяет OTP, создаёт сессию, определяет роль пользователя */
     fun verifyCode(code: String) {
         if (lastEmail.isBlank()) {
             _state.value = AuthState.Error("Сначала запросите код.")
@@ -86,23 +87,31 @@ class AuthViewModel : ViewModel() {
             try {
                 httpPost("verify-otp", """{"email":"$lastEmail","code":"$trimmedCode"}""")
 
-                // Получаем Firebase-сессию через анонимный вход
-                // (UID сохраняется на устройстве, сессия не истекает 6 месяцев)
-                val result = auth.signInAnonymously().await()
-                val uid = result.user?.uid ?: throw Exception("Ошибка сессии")
+                // Анонимный вход — создаёт Firebase-сессию (UID не важен, важен emailKey)
+                auth.signInAnonymously().await()
 
-                checkUser(uid, lastEmail)
+                // Сохраняем email и emailKey в SessionManager
+                val emailKey = SessionManager.emailToKey(lastEmail)
+                MassageCentrApp.session.email = lastEmail
+                MassageCentrApp.session.emailKey = emailKey
+
+                // Проверяем права администратора
+                val adminDoc = db.collection("admins").document(emailKey).get().await()
+                MassageCentrApp.session.isAdmin = adminDoc.exists()
+
+                checkUser(emailKey)
             } catch (e: Exception) {
                 _state.value = AuthState.Error(e.message ?: "Ошибка проверки кода")
             }
         }
     }
 
-    fun checkUser(uid: String, email: String) {
+    /** Проверяет, есть ли профиль пользователя по emailKey */
+    fun checkUser(emailKey: String) {
         _state.value = AuthState.Loading
         viewModelScope.launch {
             try {
-                val user = userRepository.getUser(uid)
+                val user = userRepository.getUser(emailKey)
                 _state.value = if (user != null) AuthState.LoggedIn else AuthState.NeedRegistration
             } catch (e: Exception) {
                 _state.value = AuthState.Error("Ошибка загрузки профиля: ${e.message}")
@@ -111,7 +120,12 @@ class AuthViewModel : ViewModel() {
     }
 
     fun registerUser(name: String) {
-        val uid = auth.currentUser?.uid ?: return
+        val emailKey = MassageCentrApp.session.emailKey
+        val email = MassageCentrApp.session.email
+        if (emailKey.isBlank()) {
+            _state.value = AuthState.Error("Ошибка: войдите снова.")
+            return
+        }
         if (name.isBlank()) {
             _state.value = AuthState.Error("Введите имя.")
             return
@@ -119,7 +133,7 @@ class AuthViewModel : ViewModel() {
         _state.value = AuthState.Loading
         viewModelScope.launch {
             try {
-                userRepository.saveUser(uid, lastEmail, name.trim())
+                userRepository.saveUser(emailKey, email, name.trim())
                 _state.value = AuthState.LoggedIn
             } catch (e: Exception) {
                 _state.value = AuthState.Error("Ошибка сохранения: ${e.message}")
@@ -127,7 +141,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun getCurrentEmail(): String = lastEmail
+    fun getCurrentEmail(): String = MassageCentrApp.session.email.ifBlank { lastEmail }
 
     // ── HTTP helper ─────────────────────────────────────────────────────────────
 
@@ -136,17 +150,15 @@ class AuthViewModel : ViewModel() {
             doPost(buildApiUrl(path), jsonBody)
         }
 
-    /** Строит правильный URL: убирает лишние слеши и добавляет /api/ префикс */
     private fun buildApiUrl(path: String): String {
         val base = API_BASE.trimEnd('/')
-        // Если base уже заканчивается на /api — не добавляем повторно
         return if (base.endsWith("/api")) "$base/$path"
         else "$base/api/$path"
     }
 
     /**
-     * Выполняет POST-запрос. Вручную следует за 3xx-редиректами,
-     * потому что HttpURLConnection не делает этого для POST автоматически.
+     * POST с ручным следованием за 3xx-редиректами
+     * (HttpURLConnection не делает этого для POST автоматически).
      */
     private fun doPost(urlStr: String, jsonBody: String, depth: Int = 0): JSONObject {
         if (depth > 5) throw Exception("Слишком много редиректов от сервера")
@@ -158,18 +170,16 @@ class AuthViewModel : ViewModel() {
             conn.setRequestProperty("Accept", "application/json")
             conn.connectTimeout = 20_000
             conn.readTimeout = 20_000
-            conn.instanceFollowRedirects = false   // следим вручную
+            conn.instanceFollowRedirects = false
             conn.doOutput = true
             conn.outputStream.use { it.write(jsonBody.toByteArray(Charsets.UTF_8)) }
 
             val code = conn.responseCode
 
-            // Следуем за редиректом (301/302/307/308) вручную, сохраняя метод POST
             if (code in 301..308) {
                 val location = conn.getHeaderField("Location")
                     ?: throw Exception("Редирект без заголовка Location")
                 conn.disconnect()
-                // Если location относительный — достраиваем
                 val nextUrl = if (location.startsWith("http")) location
                               else URL(urlStr).let { u -> "${u.protocol}://${u.host}$location" }
                 return doPost(nextUrl, jsonBody, depth + 1)

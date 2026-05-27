@@ -10,6 +10,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.massagecentr.MassageCentrApp
 import com.example.massagecentr.R
 import com.example.massagecentr.auth.AuthActivity
 import com.example.massagecentr.databinding.FragmentHomeBinding
@@ -64,6 +65,7 @@ class HomeFragment : Fragment() {
 
     private fun performLogout() {
         FirebaseAuth.getInstance().signOut()
+        MassageCentrApp.session.clear()          // очищаем email, emailKey, isAdmin
         val intent = Intent(requireContext(), AuthActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)

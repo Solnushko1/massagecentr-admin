@@ -52,6 +52,11 @@
     <!-- Profile / Logout -->
     <string name="action_logout">Выйти из аккаунта</string>
 
+    <!-- Admin -->
+    <string name="admin_panel_title">Панель администратора</string>
+    <string name="admin_panel_desc">Управление услугами, новостями, чатами</string>
+    <string name="open_admin_panel">Открыть</string>
+
     <!-- Chat -->
     <string name="chat_title">Чат</string>
     <string name="message_hint">Введите сообщение…</string>

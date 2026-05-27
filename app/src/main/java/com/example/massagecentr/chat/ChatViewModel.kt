@@ -4,15 +4,14 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.massagecentr.MassageCentrApp
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 
 class ChatViewModel : ViewModel() {
 
-    private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
     private val _messages = MutableLiveData<List<ChatMessage>>()
@@ -20,18 +19,19 @@ class ChatViewModel : ViewModel() {
 
     private var listenerRegistration: ListenerRegistration? = null
 
-    val userId: String get() = auth.currentUser?.uid.orEmpty()
+    /** Стабильный ключ (не меняется при переавторизации) */
+    val userId: String get() = MassageCentrApp.session.emailKey
 
     init {
         startListening()
     }
 
     private fun startListening() {
-        val uid = userId
-        if (uid.isBlank()) return
+        val key = userId
+        if (key.isBlank()) return
 
         listenerRegistration = db.collection("chats")
-            .document(uid)
+            .document(key)
             .collection("messages")
             .orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
@@ -55,18 +55,18 @@ class ChatViewModel : ViewModel() {
     }
 
     fun sendMessage(text: String) {
-        val uid = userId
-        if (uid.isBlank() || text.isBlank()) return
+        val key = userId
+        if (key.isBlank() || text.isBlank()) return
 
         val message = hashMapOf(
             "text" to text.trim(),
-            "senderId" to uid,
+            "senderId" to key,
             "role" to "client",
             "timestamp" to Timestamp.now()
         )
 
         db.collection("chats")
-            .document(uid)
+            .document(key)
             .collection("messages")
             .add(message)
             .addOnFailureListener { e ->
