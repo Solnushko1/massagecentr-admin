@@ -666,11 +666,11 @@ async function verifyOtp() {
 
     // Check admin
     const adminDoc = await db.collection('admins').doc(emailKey).get();
-    session.isAdmin = adminDoc.exists();
+    session.isAdmin = adminDoc.exists;
 
     // Check if registered
     const userDoc = await db.collection('users').doc(emailKey).get();
-    if (userDoc.exists()) {
+    if (userDoc.exists) {
       session.name = userDoc.data().name || '';
       await openApp();
     } else {
@@ -720,7 +720,7 @@ async function doAdminLogin() {
     await auth.signInWithEmailAndPassword(email, pass);
     const emailKey = emailToKey(email);
     const adminDoc = await db.collection('admins').doc(emailKey).get();
-    if (!adminDoc.exists()) {
+    if (!adminDoc.exists) {
       await auth.signOut();
       throw new Error('Нет прав администратора');
     }
@@ -729,7 +729,7 @@ async function doAdminLogin() {
     session.isAdmin  = true;
     // Ensure user doc exists
     const userDoc = await db.collection('users').doc(emailKey).get();
-    session.name = userDoc.exists() ? (userDoc.data().name || 'Администратор') : 'Администратор';
+    session.name = userDoc.exists ? (userDoc.data().name || 'Администратор') : 'Администратор';
     closeAdminDialog();
     await openApp();
   } catch(e) {
@@ -886,7 +886,7 @@ function renderServices() {
 // ── CONTACTS ──────────────────────────────────────────────────────────────────
 function loadContacts() {
   db.collection('app_settings').doc('contact').get().then(doc => {
-    const d = doc.exists() ? doc.data() : {};
+    const d = doc.exists ? doc.data() : {};
     renderContacts(d);
   }).catch(() => renderContacts({}));
 }
