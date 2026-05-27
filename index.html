@@ -160,15 +160,11 @@ body{font-family:'Roboto',sans-serif;background:#F5F5F5;color:#212121;display:fl
 /* Изображение новости */
 .news-img-wrap{
   width:100%;height:180px;overflow:hidden;
-  background:linear-gradient(135deg,#c5e48a,#80deea);
-  position:relative;display:flex;align-items:center;justify-content:center;
+  background:#e8f5e9;
+  position:relative;
 }
 .news-img-wrap img{
   width:100%;height:100%;object-fit:cover;display:block;
-  position:absolute;top:0;left:0;
-}
-.news-img-placeholder{
-  font-size:48px;opacity:.35;user-select:none;
 }
 .news-card-body{padding:12px 14px 14px}
 .news-card-date{font-size:11px;color:var(--teal);font-weight:500;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
@@ -786,7 +782,24 @@ function showTab(name, reset=true) {
 
 // ── NEWS ──────────────────────────────────────────
 let allNews = [];
-const NEWS_COLORS = ['#c5e48a,#80deea','#a5d6a7,#80cbc4','#80deea,#b2ebf2','#dce775,#80deea'];
+
+// Та же логика что в Android NewsAdapter.localPhotoFor()
+function localPhotoFor(title, index) {
+  const t = (title || '').toLowerCase();
+  if (t.includes('добро пожаловать') && !t.includes('детск'))
+    return '/app/src/main/res/drawable/news_welcome.jpg';
+  if (t.includes('центр') || t.includes('января') || t.includes('врач'))
+    return '/app/src/main/res/drawable/news_clinic.jpg';
+  if (t.includes('детск') || t.includes('малыш') || t.includes('ребён'))
+    return '/app/src/main/res/drawable/news_baby.jpg';
+  if (t.includes('коррекц') || t.includes('фигур') || t.includes('лимфо'))
+    return '/app/src/main/res/drawable/news_photo2.png';
+  if (t.includes('выезд') || t.includes('дом'))
+    return '/app/src/main/res/drawable/news_photo1.jpg';
+  return index % 2 === 0
+    ? '/app/src/main/res/drawable/news_photo1.jpg'
+    : '/app/src/main/res/drawable/news_photo2.png';
+}
 
 function loadNews() {
   db.collection('news').orderBy('date','desc').onSnapshot(snap => {
@@ -811,20 +824,18 @@ function renderNews() {
     const date = n.date
       ? new Date(n.date.seconds*1000).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'})
       : '';
-    const grad = NEWS_COLORS[i % NEWS_COLORS.length];
-    const hasImg = n.imageUrl && n.imageUrl.trim();
-    const imgContent = hasImg
-      ? `<img src="${esc(n.imageUrl)}" alt="" onload="this.style.opacity=1"
-              onerror="this.remove()"
-              style="opacity:0;transition:opacity .3s">`
-      : '';
+    // Если есть imageUrl — используем его, иначе локальное фото как в Android
+    const localImg = localPhotoFor(n.title, i);
+    const src = (n.imageUrl && n.imageUrl.trim()) ? n.imageUrl.trim() : localImg;
     const prev = (n.body||'').slice(0,110);
     const more = (n.body||'').length > 110;
     return `
       <div class="news-card" onclick="openNews('${esc(n.id)}')">
-        <div class="news-img-wrap" style="background:linear-gradient(135deg,${grad})">
-          ${imgContent}
-          ${hasImg ? '' : '<div class="news-img-placeholder">🏥</div>'}
+        <div class="news-img-wrap">
+          <img src="${esc(src)}" alt=""
+               onerror="this.src='${esc(localImg)}'"
+               onload="this.style.opacity=1"
+               style="opacity:0;transition:opacity .3s">
         </div>
         <div class="news-card-body">
           ${date ? `<div class="news-card-date">${esc(date)}</div>` : ''}
