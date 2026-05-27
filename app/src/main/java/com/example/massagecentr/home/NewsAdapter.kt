@@ -11,8 +11,10 @@ import com.example.massagecentr.databinding.ItemNewsBinding
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class NewsAdapter(private var items: List<NewsItem> = emptyList()) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class NewsAdapter(
+    private var items: List<NewsItem> = emptyList(),
+    private val onItemClick: (NewsItem) -> Unit = {}
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val TYPE_HEADER = 0
@@ -21,16 +23,6 @@ class NewsAdapter(private var items: List<NewsItem> = emptyList()) :
 
     private val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("ru"))
 
-    /**
-     * Подбирает локальную картинку по ключевым словам в заголовке новости.
-     * Порядок соответствует пожеланиям:
-     *  "Добро пожаловать"  → зал ожидания (news_welcome)
-     *  "10 января" / "центр" → врач (news_clinic)  — если есть отдельная новость
-     *  "Детский"            → детский массаж (news_baby)
-     *  "Коррекция" / "фигур"→ news_photo2 (массаж спины)
-     *  "Выезд"              → news_photo1 (массаж тёмный фон)
-     *  иначе                → чередование photo1/photo2
-     */
     private fun localPhotoFor(title: String, index: Int): Int {
         val t = title.lowercase()
         return when {
@@ -81,6 +73,10 @@ class NewsAdapter(private var items: List<NewsItem> = emptyList()) :
             b.tvBody.text  = item.body
             b.tvDate.text  = item.date?.toDate()?.let { dateFormat.format(it) }.orEmpty()
 
+            // Скрываем "Читать далее" если текст короткий (≤ 120 символов)
+            b.tvReadMore.visibility = if (item.body.length > 120)
+                android.view.View.VISIBLE else android.view.View.GONE
+
             val localPhoto = localPhotoFor(item.title, index)
 
             if (item.imageUrl.isNotBlank()) {
@@ -94,6 +90,9 @@ class NewsAdapter(private var items: List<NewsItem> = emptyList()) :
                 b.ivNewsImage.setImageResource(localPhoto)
                 b.ivNewsImage.scaleType = ImageView.ScaleType.CENTER_CROP
             }
+
+            // Клик по всей карточке → открыть полный текст
+            b.root.setOnClickListener { onItemClick(item) }
         }
     }
 }
