@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#8DC63F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Центр 8 за">
+<title>Медицинский центр «8 за»</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/app/src/main/res/drawable/logo.png">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+/* ── RESET & BASE ─────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #F7FAF5; color: #222;
+  display: flex; flex-direction: column;
+}
+
+/* ── CSS VARS ─────────────────────────────────────── */
+:root {
+  --primary: #8DC63F;
+  --primary-dark: #6fa030;
+  --accent: #00BCD4;
+  --accent-dark: #0097a7;
+  --bg: #F7FAF5;
+  --surface: #fff;
+  --border: #e0e0e0;
+  --text: #222;
+  --text-secondary: #666;
+  --text-hint: #aaa;
+  --error: #e53935;
+  --nav-height: 64px;
+  --topbar-height: 56px;
+}
+
+/* ── SCREENS ──────────────────────────────────────── */
+.screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+.screen.active { display: flex; }
+
+/* ══════════════════════════════════════════
+   AUTH SCREEN
+══════════════════════════════════════════ */
+#authScreen {
+  background: linear-gradient(160deg, #8DC63F 0%, #00BCD4 100%);
+  align-items: center; justify-content: center;
+  padding: 20px; overflow-y: auto;
+}
+.auth-card {
+  background: var(--surface); border-radius: 20px;
+  padding: 32px 28px; width: 100%; max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.auth-logo { text-align: center; margin-bottom: 24px; }
+.auth-logo img { height: 64px; object-fit: contain; }
+.auth-logo h1 { font-size: 17px; color: #333; margin-top: 10px; font-weight: 600; line-height: 1.3; }
+.auth-logo p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+.auth-step { display: none; }
+.auth-step.active { display: block; }
+
+.field-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; display: block; font-weight: 500; }
+.field-input {
+  width: 100%; padding: 13px 16px; border: 1.5px solid var(--border);
+  border-radius: 12px; font-size: 16px; outline: none;
+  transition: border-color .2s; background: #fafafa;
+  -webkit-appearance: none;
+}
+.field-input:focus { border-color: var(--primary); background: #fff; }
+.field-group { margin-bottom: 18px; }
+
+.btn-primary {
+  width: 100%; padding: 14px; background: var(--primary); color: #fff;
+  border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
+  cursor: pointer; transition: background .2s; margin-top: 4px;
+}
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:disabled { background: #bbb; cursor: not-allowed; }
+
+.btn-text {
+  background: none; border: none; color: var(--primary);
+  font-size: 14px; cursor: pointer; padding: 8px 0;
+  text-decoration: underline; display: block; margin: 0 auto;
+}
+.btn-outline {
+  width: 100%; padding: 13px; background: transparent;
+  border: 1.5px solid var(--primary); border-radius: 12px;
+  font-size: 15px; font-weight: 600; color: var(--primary);
+  cursor: pointer; margin-top: 10px;
+}
+.btn-outline:hover { background: #f1f8e9; }
+
+.auth-err { color: var(--error); font-size: 13px; margin-top: 8px; text-align: center; min-height: 18px; }
+.auth-hint { color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; text-align: center; line-height: 1.5; }
+
+.otp-input {
+  text-align: center; font-size: 28px; font-weight: 700;
+  letter-spacing: 10px; width: 100%;
+}
+
+/* ══════════════════════════════════════════
+   MAIN APP
+══════════════════════════════════════════ */
+#appScreen { flex: 1; overflow: hidden; }
+#appScreen.active { display: flex; flex-direction: column; }
+
+/* Top bar */
+.topbar {
+  height: var(--topbar-height); background: var(--surface);
+  display: flex; align-items: center; padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  position: relative; flex-shrink: 0; z-index: 10;
+}
+.topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex: 1; }
+.topbar-logo { height: 34px; object-fit: contain; margin-right: 10px; }
+.btn-icon {
+  background: none; border: none; cursor: pointer;
+  font-size: 20px; padding: 8px; border-radius: 50%;
+  color: var(--text-secondary); transition: background .15s;
+}
+.btn-icon:hover { background: #f0f0f0; }
+
+/* Tab pages */
+.tab-page { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
+.tab-page.active { display: flex; }
+
+/* ── Bottom nav ──────────────────────────────── */
+.bottom-nav {
+  height: var(--nav-height); background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: stretch;
+  flex-shrink: 0;
+  box-shadow: 0 -1px 6px rgba(0,0,0,0.08);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-hint); transition: color .15s; padding: 6px 2px;
+  font-size: 10px; font-weight: 500;
+}
+.nav-btn .nav-icon { font-size: 22px; line-height: 1; }
+.nav-btn.active { color: var(--primary); }
+.nav-btn.hidden { display: none; }
+
+/* ══════════════════════════════════════════
+   HOME / NEWS TAB
+══════════════════════════════════════════ */
+.section-header {
+  padding: 14px 16px 6px; font-size: 16px; font-weight: 700; color: var(--text);
+}
+.news-list { padding: 0 12px 80px; display: flex; flex-direction: column; gap: 12px; }
+.news-card {
+  background: var(--surface); border-radius: 14px;
+  overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  cursor: pointer; transition: transform .15s, box-shadow .15s;
+}
+.news-card:active { transform: scale(.98); }
+.news-card img { width: 100%; height: 160px; object-fit: cover; display: block; background: #e8f5e9; }
+.news-card-body { padding: 14px; }
+.news-card-date { font-size: 12px; color: var(--accent); margin-bottom: 6px; font-weight: 500; }
+.news-card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.35; }
+.news-card-preview { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.news-card-more { font-size: 13px; color: var(--primary); font-weight: 600; margin-top: 6px; }
+.empty-state { text-align: center; padding: 60px 24px; color: var(--text-hint); font-size: 15px; }
+.spinner { text-align: center; padding: 40px; color: var(--text-hint); font-size: 14px; }
+
+/* ══════════════════════════════════════════
+   SERVICES TAB
+══════════════════════════════════════════ */
+.chips-row {
+  display: flex; gap: 8px; padding: 10px 12px 6px;
+  overflow-x: auto; flex-shrink: 0;
+  scrollbar-width: none;
+}
+.chips-row::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+  border: 1.5px solid var(--border); font-size: 13px;
+  background: #fff; cursor: pointer; transition: all .15s;
+  white-space: nowrap;
+}
+.chip.active { border-color: var(--primary); color: var(--primary); background: #f1f8e9; }
+.services-list { padding: 0 12px 80px; display: flex; flex-direction: column; gap: 8px; }
+.service-card {
+  background: var(--surface); border-radius: 12px;
+  padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+.service-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.service-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.badge {
+  padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
+}
+.badge-price { background: #f1f8e9; color: #4a7c1a; }
+.badge-duration { background: #e3f2fd; color: #1565c0; }
+.badge-cat { background: #fce4ec; color: #ad1457; font-size: 11px; }
+
+/* ══════════════════════════════════════════
+   CONTACTS TAB
+══════════════════════════════════════════ */
+.info-scroll { padding: 12px 12px 80px; display: flex; flex-direction: column; gap: 12px; }
+.info-card {
+  background: var(--surface); border-radius: 14px;
+  padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.info-card-title {
+  font-size: 13px; color: var(--text-secondary); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px;
+}
+.info-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.info-row:last-child { margin-bottom: 0; }
+.info-icon { font-size: 20px; flex-shrink: 0; }
+.info-text { font-size: 14px; line-height: 1.45; flex: 1; }
+.info-text a { color: var(--primary); text-decoration: none; font-weight: 500; }
+.btn-action {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 13px; border-radius: 12px; border: none;
+  font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px;
+  transition: background .15s;
+}
+.btn-call { background: var(--primary); color: #fff; }
+.btn-call:hover { background: var(--primary-dark); }
+.btn-map { background: var(--accent); color: #fff; }
+.btn-map:hover { background: var(--accent-dark); }
+.btn-email-action { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); }
+.hours-text { font-size: 14px; white-space: pre-line; line-height: 1.8; color: var(--text); }
+
+/* Admin card in contacts */
+.admin-card-info {
+  background: linear-gradient(135deg, #f1f8e9, #e8f5e9);
+  border: 1.5px solid var(--primary); border-radius: 14px;
+  padding: 16px; display: none;
+}
+.admin-card-info.visible { display: block; }
+.admin-card-title { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.admin-card-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+
+/* ══════════════════════════════════════════
+   CHAT TAB
+══════════════════════════════════════════ */
+#tabChat { overflow: hidden; }
+.chat-wrap { flex: 1; display: flex; overflow: hidden; }
+
+/* Client chat */
+.chat-single { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.msg { max-width: 75%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.45; }
+.msg-out { background: var(--primary); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg-in  { background: #e3f2fd; color: #111; align-self: flex-start; border-bottom-left-radius: 4px; }
+.msg-label { font-size: 10px; font-weight: 700; margin-bottom: 3px; opacity: .75; }
+.msg-time  { font-size: 10px; margin-top: 4px; text-align: right; opacity: .65; }
+.chat-input-bar {
+  display: flex; align-items: flex-end; gap: 8px;
+  padding: 10px 12px 14px; background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.chat-textarea {
+  flex: 1; padding: 10px 14px; border: 1.5px solid var(--border);
+  border-radius: 22px; font-size: 15px; resize: none;
+  outline: none; font-family: inherit; max-height: 100px;
+  background: #fafafa; transition: border-color .2s;
+  line-height: 1.4;
+}
+.chat-textarea:focus { border-color: var(--accent); background: #fff; }
+.btn-send {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 50%; width: 44px; height: 44px; font-size: 18px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .15s;
+}
+.btn-send:hover { background: var(--accent-dark); }
+.chat-empty-msg {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  color: var(--text-hint); font-size: 15px; text-align: center; padding: 20px;
+}
+
+/* Admin chat split view */
+.conv-list {
+  width: 260px; border-right: 1px solid var(--border);
+  overflow-y: auto; flex-shrink: 0; background: var(--surface);
+}
+@media (max-width: 600px) {
+  .conv-list { width: 110px; }
+  .conv-name { font-size: 12px; }
+  .conv-preview { display: none; }
+}
+.conv-item {
+  padding: 12px 14px; border-bottom: 1px solid #f0f0f0;
+  cursor: pointer; transition: background .12s;
+}
+.conv-item:hover { background: #f8fff8; }
+.conv-item.active { background: #f1f8e9; border-left: 3px solid var(--primary); }
+.conv-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-email { font-size: 11px; color: var(--text-hint); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-preview { font-size: 11px; color: var(--text-hint); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ══════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.5); z-index: 300;
+  align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 600px; max-height: 85vh;
+  overflow-y: auto; padding: 0 0 env(safe-area-inset-bottom);
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 10px auto 0; }
+.modal-title { font-size: 17px; font-weight: 700; padding: 14px 18px 0; }
+.modal-body  { padding: 14px 18px 24px; }
+.modal-date  { font-size: 13px; color: var(--accent); margin-bottom: 10px; font-weight: 500; }
+.modal-text  { font-size: 15px; line-height: 1.65; white-space: pre-line; color: var(--text); }
+.modal-close-btn {
+  display: block; margin: 0 18px 16px;
+  padding: 13px; background: #f0f0f0; color: #555;
+  border: none; border-radius: 12px; font-size: 15px;
+  font-weight: 600; cursor: pointer; text-align: center; width: calc(100% - 36px);
+}
+
+/* Admin login dialog */
+.dialog-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.5); z-index: 400;
+  align-items: center; justify-content: center; padding: 16px;
+}
+.dialog-overlay.open { display: flex; }
+.dialog-card {
+  background: var(--surface); border-radius: 16px;
+  width: 100%; max-width: 360px; padding: 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.2);
+}
+.dialog-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+.dialog-err { color: var(--error); font-size: 13px; margin-bottom: 10px; text-align: center; }
+
+/* ── TOAST ───────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: calc(var(--nav-height) + 12px); left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #323232; color: #fff; padding: 10px 20px;
+  border-radius: 24px; font-size: 14px; z-index: 500;
+  white-space: nowrap; transition: transform .25s, opacity .25s; opacity: 0;
+  max-width: calc(100vw - 32px); text-align: center;
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+#toast.success { background: #388e3c; }
+#toast.error   { background: #c62828; }
+
+/* Loading overlay */
+#loadingOverlay {
+  position: fixed; inset: 0; background: rgba(255,255,255,.85);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 600; font-size: 28px;
+}
+#loadingOverlay.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════
+     LOADING
+═══════════════════════════════ -->
+<div id="loadingOverlay">⏳</div>
+
+<!-- ═══════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════ -->
+<div id="authScreen" class="screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="app/src/main/res/drawable/logo.png" alt="Логотип"
+           onerror="this.style.display='none'">
+      <h1>Медицинский центр<br>«8 за»</h1>
+      <p>г. Калуга</p>
+    </div>
+
+    <!-- Step 1: Email -->
+    <div id="authStepEmail" class="auth-step active">
+      <div class="field-group">
+        <label class="field-label">Ваш email</label>
+        <input id="inputEmail" class="field-input" type="email"
+               placeholder="example@mail.ru" autocomplete="email"
+               onkeydown="if(event.key==='Enter') sendOtp()">
+      </div>
+      <button class="btn-primary" onclick="sendOtp()">Получить код</button>
+      <div id="errEmail" class="auth-err"></div>
+      <button class="btn-outline" style="margin-top:16px" onclick="openAdminDialog()">⚙ Войти как администратор</button>
+    </div>
+
+    <!-- Step 2: OTP -->
+    <div id="authStepOtp" class="auth-step">
+      <p class="auth-hint" id="otpHint">Введите 6-значный код из письма</p>
+      <div class="field-group">
+        <input id="inputOtp" class="field-input otp-input" type="number"
+               placeholder="000000" maxlength="6" inputmode="numeric"
+               onkeydown="if(event.key==='Enter') verifyOtp()">
+      </div>
+      <button class="btn-primary" onclick="verifyOtp()">Войти</button>
+      <div id="errOtp" class="auth-err"></div>
+      <button class="btn-text" onclick="resendOtp()">Не пришло? Отправить ещё раз</button>
+      <button class="btn-text" onclick="goToEmailStep()">← Изменить email</button>
+    </div>
+
+    <!-- Step 3: Registration -->
+    <div id="authStepReg" class="auth-step">
+      <p class="auth-hint">Добро пожаловать! Введите ваше имя для регистрации.</p>
+      <div class="field-group">
+        <label class="field-label">Ваше имя</label>
+        <input id="inputName" class="field-input" type="text"
+               placeholder="Иван Иванов" autocomplete="name"
+               onkeydown="if(event.key==='Enter') registerUser()">
+      </div>
+      <button class="btn-primary" onclick="registerUser()">Зарегистрироваться</button>
+      <div id="errReg" class="auth-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     MAIN APP
+═══════════════════════════════ -->
+<div id="appScreen" class="screen">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <img class="topbar-logo" src="app/src/main/res/drawable/logo.png" alt=""
+         onerror="this.style.display='none'">
+    <span class="topbar-title" id="topbarTitle">Главная</span>
+    <button class="btn-icon" onclick="doLogout()" title="Выйти">⎋</button>
+  </div>
+
+  <!-- Tab pages -->
+
+  <!-- HOME -->
+  <div id="tabHome" class="tab-page active">
+    <div class="section-header" id="homeHeader">Новости и акции</div>
+    <div id="newsList" class="news-list"><div class="spinner">Загрузка…</div></div>
+  </div>
+
+  <!-- SERVICES -->
+  <div id="tabServices" class="tab-page">
+    <div id="chipsRow" class="chips-row"></div>
+    <div id="servicesList" class="services-list"><div class="spinner">Загрузка…</div></div>
+  </div>
+
+  <!-- CONTACTS -->
+  <div id="tabContacts" class="tab-page">
+    <div class="info-scroll" id="infoScroll">
+      <div class="spinner">Загрузка…</div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="tabChat" class="tab-page">
+    <div class="chat-wrap" id="chatWrap">
+      <!-- filled dynamically -->
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="navHome" onclick="showTab('home')">
+      <span class="nav-icon">🏠</span>Главная
+    </button>
+    <button class="nav-btn" id="navServices" onclick="showTab('services')">
+      <span class="nav-icon">💆</span>Услуги
+    </button>
+    <button class="nav-btn" id="navContacts" onclick="showTab('contacts')">
+      <span class="nav-icon">📍</span>Контакты
+    </button>
+    <button class="nav-btn" id="navChat" onclick="showTab('chat')">
+      <span class="nav-icon">💬</span>Чат
+    </button>
+  </nav>
+</div>
+
+<!-- ═══════════════════════════════
+     NEWS DETAIL MODAL
+═══════════════════════════════ -->
+<div class="modal-overlay" id="newsModal" onclick="if(event.target===this) closeNewsModal()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="newsModalTitle"></div>
+    <div class="modal-body">
+      <div class="modal-date" id="newsModalDate"></div>
+      <div class="modal-text" id="newsModalText"></div>
+    </div>
+    <button class="modal-close-btn" onclick="closeNewsModal()">Закрыть</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     ADMIN LOGIN DIALOG
+═══════════════════════════════ -->
+<div class="dialog-overlay" id="adminDialog" onclick="if(event.target===this) closeAdminDialog()">
+  <div class="dialog-card">
+    <div class="dialog-title">⚙ Вход администратора</div>
+    <div class="field-group">
+      <label class="field-label">Email</label>
+      <input id="adminEmail" class="field-input" type="email" placeholder="admin@example.com">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Пароль</label>
+      <input id="adminPassword" class="field-input" type="password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') doAdminLogin()">
+    </div>
+    <div id="adminDialogErr" class="dialog-err"></div>
+    <button class="btn-primary" onclick="doAdminLogin()">Войти</button>
+    <button class="modal-close-btn" style="margin-top:10px" onclick="closeAdminDialog()">Отмена</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════ -->
+<script>
+// ── Firebase ──────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyBBVV95bvyjbpYDtkKgmsG9gR1_qAK8-_0",
+  authDomain:        "massage-centr.firebaseapp.com",
+  projectId:         "massage-centr",
+  storageBucket:     "massage-centr.firebasestorage.app",
+  messagingSenderId: "713553411914",
+  appId:             "1:713553411914:android:f78ac0c3138743c2678bb3"
+};
+firebase.initializeApp(firebaseConfig);
+const db   = firebase.firestore();
+const auth = firebase.auth();
+
+// ── Session ───────────────────────────────────────────────────────────────────
+const session = {
+  get email()    { return localStorage.getItem('mc_email')    || ''; },
+  set email(v)   { localStorage.setItem('mc_email', v); },
+  get emailKey() { return localStorage.getItem('mc_emailKey') || ''; },
+  set emailKey(v){ localStorage.setItem('mc_emailKey', v); },
+  get name()     { return localStorage.getItem('mc_name')     || ''; },
+  set name(v)    { localStorage.setItem('mc_name', v); },
+  get isAdmin()  { return localStorage.getItem('mc_isAdmin') === '1'; },
+  set isAdmin(v) { localStorage.setItem('mc_isAdmin', v ? '1' : '0'); },
+  clear() { ['mc_email','mc_emailKey','mc_name','mc_isAdmin'].forEach(k => localStorage.removeItem(k)); }
+};
+
+function emailToKey(email) {
+  return email.toLowerCase().trim().replace(/\./g, '_');
+}
+
+const API = '';  // same origin — vercel serves /api/*
+
+// ── Startup ───────────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(async user => {
+  hideLoading();
+  if (user && session.emailKey) {
+    await openApp();
+  } else {
+    showScreen('authScreen');
+  }
+});
+
+async function openApp() {
+  showScreen('appScreen');
+  showTab('home', false);
+  initChatPanel();
+  loadNews();
+  loadServices();
+  loadContacts();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+function showLoading()  { document.getElementById('loadingOverlay').classList.remove('hidden'); }
+
+// ── Auth: Email OTP ───────────────────────────────────────────────────────────
+let pendingEmail = '';
+
+function goToEmailStep() {
+  showAuthStep('authStepEmail');
+}
+
+function showAuthStep(id) {
+  document.querySelectorAll('.auth-step').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+async function sendOtp() {
+  const email = document.getElementById('inputEmail').value.trim();
+  const errEl = document.getElementById('errEmail');
+  errEl.textContent = '';
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'Введите корректный email';
+    return;
+  }
+  showLoading();
+  try {
+    const res = await fetch('/api/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Ошибка отправки');
+    pendingEmail = email;
+    document.getElementById('otpHint').textContent =
+      `Код отправлен на ${email}`;
+    showAuthStep('authStepOtp');
+    document.getElementById('inputOtp').value = '';
+    document.getElementById('inputOtp').focus();
+  } catch(e) {
+    errEl.textContent = e.message;
+  } finally {
+    hideLoading();
+  }
+}
+
+async function resendOtp() {
+  if (!pendingEmail) { goToEmailStep(); return; }
+  document.getElementById('inputEmail').value = pendingEmail;
+  await sendOtp();
+}
+
+async function verifyOtp() {
+  const code  = document.getElementById('inputOtp').value.trim();
+  const errEl = document.getElementById('errOtp');
+  errEl.textContent = '';
+  if (!code || code.length !== 6) {
+    errEl.textContent = 'Введите 6-значный код';
+    return;
+  }
+  showLoading();
+  try {
+    const res = await fetch('/api/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingEmail, code })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Неверный код');
+
+    // Sign in anonymously so Firestore rules work
+    await auth.signInAnonymously();
+    const emailKey = emailToKey(pendingEmail);
+    session.email    = pendingEmail;
+    session.emailKey = emailKey;
+
+    // Check admin
+    const adminDoc = await db.collection('admins').doc(emailKey).get();
+    session.isAdmin = adminDoc.exists();
+
+    // Check if registered
+    const userDoc = await db.collection('users').doc(emailKey).get();
+    if (userDoc.exists()) {
+      session.name = userDoc.data().name || '';
+      await openApp();
+    } else {
+      hideLoading();
+      showAuthStep('authStepReg');
+      document.getElementById('inputName').focus();
+    }
+  } catch(e) {
+    errEl.textContent = e.message;
+    hideLoading();
+  }
+}
+
+async function registerUser() {
+  const name  = document.getElementById('inputName').value.trim();
+  const errEl = document.getElementById('errReg');
+  errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Введите ваше имя'; return; }
+  showLoading();
+  try {
+    await db.collection('users').doc(session.emailKey).set({
+      emailKey: session.emailKey,
+      email:    session.email,
+      name:     name,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    session.name = name;
+    await openApp();
+  } catch(e) {
+    errEl.textContent = 'Ошибка: ' + e.message;
+    hideLoading();
+  }
+}
+
+// ── Admin Login ───────────────────────────────────────────────────────────────
+function openAdminDialog()  { document.getElementById('adminDialog').classList.add('open'); }
+function closeAdminDialog() { document.getElementById('adminDialog').classList.remove('open'); }
+
+async function doAdminLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const pass  = document.getElementById('adminPassword').value;
+  const errEl = document.getElementById('adminDialogErr');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Введите email и пароль'; return; }
+  showLoading();
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    const emailKey = emailToKey(email);
+    const adminDoc = await db.collection('admins').doc(emailKey).get();
+    if (!adminDoc.exists()) {
+      await auth.signOut();
+      throw new Error('Нет прав администратора');
+    }
+    session.email    = email;
+    session.emailKey = emailKey;
+    session.isAdmin  = true;
+    // Ensure user doc exists
+    const userDoc = await db.collection('users').doc(emailKey).get();
+    session.name = userDoc.exists() ? (userDoc.data().name || 'Администратор') : 'Администратор';
+    closeAdminDialog();
+    await openApp();
+  } catch(e) {
+    const msgs = {
+      'auth/user-not-found':   'Пользователь не найден',
+      'auth/wrong-password':   'Неверный пароль',
+      'auth/invalid-email':    'Неверный формат email',
+      'auth/too-many-requests':'Слишком много попыток',
+    };
+    errEl.textContent = msgs[e.code] || e.message;
+    hideLoading();
+  }
+}
+
+// ── Logout ────────────────────────────────────────────────────────────────────
+async function doLogout() {
+  if (!confirm('Выйти из аккаунта?')) return;
+  stopChatListeners();
+  session.clear();
+  await auth.signOut();
+  showScreen('authScreen');
+  goToEmailStep();
+}
+
+// ── Tab Navigation ────────────────────────────────────────────────────────────
+const tabConfig = {
+  home:     { page: 'tabHome',     nav: 'navHome',     title: 'Главная' },
+  services: { page: 'tabServices', nav: 'navServices', title: 'Услуги' },
+  contacts: { page: 'tabContacts', nav: 'navContacts', title: 'Контакты' },
+  chat:     { page: 'tabChat',     nav: 'navChat',     title: 'Чат' },
+};
+
+let currentTab = 'home';
+
+function showTab(name, scroll = true) {
+  currentTab = name;
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const cfg = tabConfig[name];
+  if (!cfg) return;
+  document.getElementById(cfg.page).classList.add('active');
+  document.getElementById(cfg.nav).classList.add('active');
+  document.getElementById('topbarTitle').textContent = cfg.title;
+  if (scroll) document.getElementById(cfg.page).scrollTop = 0;
+}
+
+// ── NEWS ──────────────────────────────────────────────────────────────────────
+let allNews = [];
+
+function loadNews() {
+  db.collection('news').orderBy('date', 'desc').onSnapshot(snap => {
+    allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderNews();
+  }, () => {
+    db.collection('news').orderBy('date', 'desc').get().then(snap => {
+      allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderNews();
+    });
+  });
+}
+
+function renderNews() {
+  const el = document.getElementById('newsList');
+  if (!allNews.length) {
+    el.innerHTML = '<div class="empty-state">📰 Новостей пока нет</div>';
+    return;
+  }
+  el.innerHTML = allNews.map(n => {
+    const date = n.date ? new Date(n.date.seconds * 1000).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'}) : '';
+    const img  = n.imageUrl
+      ? `<img src="${esc(n.imageUrl)}" loading="lazy" onerror="this.style.display='none'" alt="">`
+      : '';
+    const preview = (n.body || '').slice(0, 120);
+    const hasMore = (n.body || '').length > 120;
+    return `
+      <div class="news-card" onclick="openNewsModal('${n.id}')">
+        ${img}
+        <div class="news-card-body">
+          <div class="news-card-date">📅 ${esc(date)}</div>
+          <div class="news-card-title">${esc(n.title)}</div>
+          <div class="news-card-preview">${esc(preview)}${hasMore ? '…' : ''}</div>
+          ${hasMore ? '<div class="news-card-more">Читать далее →</div>' : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openNewsModal(id) {
+  const n = allNews.find(x => x.id === id);
+  if (!n) return;
+  const date = n.date ? new Date(n.date.seconds * 1000).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'}) : '';
+  document.getElementById('newsModalTitle').textContent = n.title || '';
+  document.getElementById('newsModalDate').textContent  = date ? '📅 ' + date : '';
+  document.getElementById('newsModalText').textContent  = n.body || '';
+  document.getElementById('newsModal').classList.add('open');
+}
+
+function closeNewsModal() {
+  document.getElementById('newsModal').classList.remove('open');
+}
+
+// ── SERVICES ──────────────────────────────────────────────────────────────────
+let allServices   = [];
+let activeFilter  = 'all';
+
+function loadServices() {
+  db.collection('services').orderBy('category').onSnapshot(snap => {
+    allServices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderChips();
+    renderServices();
+  }, () => {
+    db.collection('services').get().then(snap => {
+      allServices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderChips();
+      renderServices();
+    });
+  });
+}
+
+function renderChips() {
+  const cats = ['all', ...new Set(allServices.map(s => s.category).filter(Boolean))];
+  document.getElementById('chipsRow').innerHTML = cats.map(c =>
+    `<button class="chip ${activeFilter===c?'active':''}"
+      onclick="setFilter('${esc(c)}')">${c === 'all' ? 'Все' : esc(c)}</button>`
+  ).join('');
+}
+
+function setFilter(cat) {
+  activeFilter = cat;
+  renderChips();
+  renderServices();
+}
+
+function renderServices() {
+  const filtered = activeFilter === 'all'
+    ? allServices
+    : allServices.filter(s => s.category === activeFilter);
+  const el = document.getElementById('servicesList');
+  if (!filtered.length) {
+    el.innerHTML = '<div class="empty-state">Услуг не найдено</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(s => `
+    <div class="service-card">
+      <div class="service-name">${esc(s.name)}</div>
+      <div class="service-meta">
+        ${s.price    ? `<span class="badge badge-price">💰 ${esc(s.price)}</span>` : ''}
+        ${s.duration ? `<span class="badge badge-duration">⏱ ${esc(s.duration)}</span>` : ''}
+        ${s.category ? `<span class="badge badge-cat">${esc(s.category)}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ── CONTACTS ──────────────────────────────────────────────────────────────────
+function loadContacts() {
+  db.collection('app_settings').doc('contact').get().then(doc => {
+    const d = doc.exists() ? doc.data() : {};
+    renderContacts(d);
+  }).catch(() => renderContacts({}));
+}
+
+function renderContacts(d) {
+  const phone1   = d.phone1   || '+7 (930) 754-02-04';
+  const phone2   = d.phone2   || '+7 (4842) 40-02-04';
+  const email    = d.email    || 'kaluga.8za@gmail.com';
+  const address  = d.address  || 'г. Калуга, ул. Ленина, д. 1';
+  const hours    = d.hours    || 'Пн–Чт: 10:00–19:00\nПт–Сб: выходной\nВс: 10:00–19:00';
+  const about    = d.about    || '';
+
+  const adminHtml = session.isAdmin ? `
+    <div class="admin-card-info visible">
+      <div class="admin-card-title">⚙ Панель администратора</div>
+      <div class="admin-card-desc">Управление услугами, новостями и чатами</div>
+      <button class="btn-action btn-call" onclick="window.open('https://massagecentr-admin.vercel.app/admin','_blank')">
+        🔧 Открыть панель
+      </button>
+    </div>` : '';
+
+  document.getElementById('infoScroll').innerHTML = `
+    ${adminHtml}
+    ${about ? `<div class="info-card"><div class="info-card-title">О центре</div>
+      <div class="info-text" style="font-size:14px;line-height:1.6">${esc(about)}</div></div>` : ''}
+    <div class="info-card">
+      <div class="info-card-title">📞 Контакты</div>
+      <div class="info-row">
+        <span class="info-icon">📱</span>
+        <span class="info-text"><a href="tel:${esc(phone1)}">${esc(phone1)}</a></span>
+      </div>
+      <div class="info-row">
+        <span class="info-icon">☎️</span>
+        <span class="info-text"><a href="tel:${esc(phone2)}">${esc(phone2)}</a></span>
+      </div>
+      <div class="info-row">
+        <span class="info-icon">✉️</span>
+        <span class="info-text"><a href="mailto:${esc(email)}">${esc(email)}</a></span>
+      </div>
+      <button class="btn-action btn-call" onclick="window.location='tel:${esc(phone1)}'">
+        📞 Позвонить
+      </button>
+      <button class="btn-action btn-email-action" style="margin-top:8px" onclick="window.location='mailto:${esc(email)}'">
+        ✉️ Написать письмо
+      </button>
+    </div>
+    <div class="info-card">
+      <div class="info-card-title">📍 Адрес</div>
+      <div class="info-row">
+        <span class="info-icon">🏥</span>
+        <span class="info-text">${esc(address)}</span>
+      </div>
+      <button class="btn-action btn-map"
+        onclick="window.open('https://yandex.ru/maps/?text=${encodeURIComponent(address)}','_blank')">
+        🗺 Открыть на карте
+      </button>
+    </div>
+    <div class="info-card">
+      <div class="info-card-title">🕐 Часы работы</div>
+      <div class="hours-text">${esc(hours)}</div>
+    </div>`;
+}
+
+// ── CHAT ──────────────────────────────────────────────────────────────────────
+let chatUnsub      = null;
+let convUnsub      = null;
+let activeChatKey  = null;
+
+function stopChatListeners() {
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  if (convUnsub) { convUnsub(); convUnsub = null; }
+}
+
+function initChatPanel() {
+  const wrap = document.getElementById('chatWrap');
+  if (session.isAdmin) {
+    // Admin: split view
+    wrap.innerHTML = `
+      <div class="conv-list" id="convList"><div class="spinner">Загрузка…</div></div>
+      <div class="chat-single" id="chatSingle">
+        <div class="chat-empty-msg">← Выберите клиента из списка</div>
+      </div>`;
+    loadConversations();
+  } else {
+    // Client: single chat
+    wrap.innerHTML = `
+      <div class="chat-single" id="chatSingle">
+        <div class="chat-messages" id="chatMessages"><div class="spinner">Загрузка…</div></div>
+        <div class="chat-input-bar">
+          <textarea id="chatInput" class="chat-textarea" placeholder="Введите сообщение…" rows="1"
+            oninput="autoResize(this)"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendClientMessage();}"></textarea>
+          <button class="btn-send" onclick="sendClientMessage()">➤</button>
+        </div>
+      </div>`;
+    loadClientMessages();
+  }
+}
+
+// ── Client chat ──────────────────────────────────────────────────────────────
+function loadClientMessages() {
+  const key = session.emailKey;
+  if (!key) return;
+  stopChatListeners();
+  chatUnsub = db.collection('chats').doc(key).collection('messages')
+    .orderBy('timestamp').onSnapshot(snap => {
+      const el = document.getElementById('chatMessages');
+      if (!el) return;
+      if (!snap.docs.length) {
+        el.innerHTML = '<div class="chat-empty-msg">Напишите нам — мы ответим!</div>';
+        return;
+      }
+      el.innerHTML = snap.docs.map(d => {
+        const m = d.data();
+        const time = m.timestamp
+          ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})
+          : '';
+        const isAdmin = m.role === 'admin';
+        return `
+          <div class="msg ${isAdmin ? 'msg-in' : 'msg-out'}">
+            ${isAdmin ? '<div class="msg-label">Администратор</div>' : ''}
+            ${esc(m.text)}
+            <div class="msg-time">${time}</div>
+          </div>`;
+      }).join('');
+      el.scrollTop = el.scrollHeight;
+    });
+}
+
+async function sendClientMessage() {
+  const ta   = document.getElementById('chatInput');
+  const text = ta.value.trim();
+  if (!text) return;
+  const key = session.emailKey;
+  ta.value = '';
+  autoResize(ta);
+  try {
+    const ts = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('chats').doc(key).collection('messages').add({
+      text, role: 'client',
+      senderId:  auth.currentUser?.uid || key,
+      timestamp: ts
+    });
+    // Create/update parent doc so admin panel detects conversation
+    await db.collection('chats').doc(key).set({
+      lastMessage:   text,
+      lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      userKey:       key,
+      userName:      session.name || session.email,
+      userEmail:     session.email
+    }, { merge: true });
+  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+}
+
+// ── Admin chat ───────────────────────────────────────────────────────────────
+function loadConversations() {
+  if (convUnsub) convUnsub();
+  convUnsub = db.collection('chats').onSnapshot(async snap => {
+    const convEl = document.getElementById('convList');
+    if (!convEl) return;
+    if (!snap.docs.length) {
+      convEl.innerHTML = '<div class="empty-state" style="font-size:12px;padding:20px">Нет сообщений</div>';
+      return;
+    }
+    const convs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.lastTimestamp?.seconds || 0) - (a.lastTimestamp?.seconds || 0));
+    convEl.innerHTML = convs.map(c => `
+      <div class="conv-item ${activeChatKey === c.id ? 'active' : ''}"
+           onclick="openAdminChat('${esc(c.id)}','${esc(c.userName||c.id)}','${esc(c.userEmail||'')}')">
+        <div class="conv-name">${esc(c.userName || c.id)}</div>
+        <div class="conv-email">${esc(c.userEmail || c.id)}</div>
+        <div class="conv-preview">${esc(c.lastMessage || '')}</div>
+      </div>`).join('');
+  });
+}
+
+function openAdminChat(key, name, email) {
+  activeChatKey = key;
+  // Re-render conv list to highlight active
+  document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  const single = document.getElementById('chatSingle');
+  single.innerHTML = `
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:#fafff5;flex-shrink:0">
+      <div style="font-size:14px;font-weight:700">${esc(name)}</div>
+      <div style="font-size:12px;color:var(--text-hint)">${esc(email)}</div>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-bar">
+      <textarea id="chatInput" class="chat-textarea" placeholder="Ответить клиенту…" rows="1"
+        oninput="autoResize(this)"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminMessage('${esc(key)}');}"></textarea>
+      <button class="btn-send" onclick="sendAdminMessage('${esc(key)}')">➤</button>
+    </div>`;
+
+  if (chatUnsub) chatUnsub();
+  chatUnsub = db.collection('chats').doc(key).collection('messages')
+    .orderBy('timestamp').onSnapshot(snap => {
+      const el = document.getElementById('chatMessages');
+      if (!el) return;
+      if (!snap.docs.length) {
+        el.innerHTML = '<div class="chat-empty-msg">Нет сообщений</div>';
+        return;
+      }
+      el.innerHTML = snap.docs.map(d => {
+        const m = d.data();
+        const time = m.timestamp
+          ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})
+          : '';
+        const isAdmin = m.role === 'admin';
+        return `
+          <div class="msg ${isAdmin ? 'msg-in' : 'msg-out'}">
+            <div class="msg-label">${isAdmin ? 'Администратор' : esc(name)}</div>
+            ${esc(m.text)}
+            <div class="msg-time">${time}</div>
+          </div>`;
+      }).join('');
+      el.scrollTop = el.scrollHeight;
+    });
+}
+
+async function sendAdminMessage(key) {
+  const ta   = document.getElementById('chatInput');
+  const text = ta.value.trim();
+  if (!text) return;
+  ta.value = '';
+  autoResize(ta);
+  try {
+    await db.collection('chats').doc(key).collection('messages').add({
+      text, role: 'admin',
+      senderId:  auth.currentUser?.uid || 'admin',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('chats').doc(key).set({
+      lastMessage:   '✓ ' + text,
+      lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = type ? `show ${type}` : 'show';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = ''; }, 3000);
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Service Worker ────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
