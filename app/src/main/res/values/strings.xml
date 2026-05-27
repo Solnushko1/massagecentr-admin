@@ -20,6 +20,7 @@
     <string name="nav_services">Услуги</string>
     <string name="nav_info">Контакты</string>
     <string name="nav_chat">Чат</string>
+    <string name="nav_admin">Управление</string>
 
     <!-- Clinic branding -->
     <string name="clinic_name">Медицинский центр «8 за»</string>

@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.example.massagecentr.MassageCentrApp
+import com.example.massagecentr.R
+import com.example.massagecentr.admin.AdminFragment
 import com.example.massagecentr.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -19,5 +22,21 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(binding.navHostFragment.id) as NavHostFragment
         val navController = navHostFragment.navController
         binding.bottomNav.setupWithNavController(navController)
+
+        // Вкладка «Управление» — только для администратора
+        binding.bottomNav.menu.findItem(R.id.adminFragment)?.isVisible =
+            MassageCentrApp.session.isAdmin
+    }
+
+    /** Кнопка «Назад»: если WebView может вернуться — возвращаемся внутри WebView */
+    override fun onBackPressed() {
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(binding.navHostFragment.id) as NavHostFragment
+        val current = navHostFragment.childFragmentManager.primaryNavigationFragment
+        if (current is AdminFragment && current.canGoBack()) {
+            current.goBack()
+        } else {
+            super.onBackPressed()
+        }
     }
 }

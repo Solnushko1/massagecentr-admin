@@ -24,4 +24,9 @@
         android:name="com.example.massagecentr.chat.ChatFragment"
         android:label="@string/nav_chat" />
 
+    <fragment
+        android:id="@+id/adminFragment"
+        android:name="com.example.massagecentr.admin.AdminFragment"
+        android:label="@string/nav_admin" />
+
 </navigation>

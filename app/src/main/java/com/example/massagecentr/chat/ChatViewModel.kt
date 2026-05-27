@@ -33,16 +33,19 @@ class ChatViewModel : ViewModel() {
 
     /** Отправка сообщения клиентом (в свою переписку) */
     fun sendMessage(text: String) {
-        val key = userId
-        if (key.isBlank() || text.isBlank()) return
+        val key   = userId
+        val trimmed = text.trim()
+        if (key.isBlank() || trimmed.isBlank()) return
+        val ts = Timestamp.now()
+        // Сообщение в подколлекцию
         db.collection("chats").document(key).collection("messages").add(
-            hashMapOf(
-                "text"      to text.trim(),
-                "senderId"  to key,
-                "role"      to "client",
-                "timestamp" to Timestamp.now()
-            )
+            hashMapOf("text" to trimmed, "senderId" to key, "role" to "client", "timestamp" to ts)
         ).addOnFailureListener { Log.w(TAG, "sendMessage failed", it) }
+        // Обновляем/создаём родительский документ — иначе веб-панель не видит переписку
+        db.collection("chats").document(key).set(
+            hashMapOf("lastMessage" to trimmed, "lastTimestamp" to ts, "userKey" to key),
+            com.google.firebase.firestore.SetOptions.merge()
+        )
     }
 
     // ─── Режим администратора ────────────────────────────────────────────────────
@@ -113,15 +116,18 @@ class ChatViewModel : ViewModel() {
 
     /** Отправка ответа администратором в переписку клиента */
     fun sendAdminReply(text: String) {
-        if (activeChatKey.isBlank() || text.isBlank()) return
-        db.collection("chats").document(activeChatKey).collection("messages").add(
-            hashMapOf(
-                "text"      to text.trim(),
-                "senderId"  to userId,
-                "role"      to "admin",
-                "timestamp" to Timestamp.now()
-            )
+        val key     = activeChatKey
+        val trimmed = text.trim()
+        if (key.isBlank() || trimmed.isBlank()) return
+        val ts = Timestamp.now()
+        db.collection("chats").document(key).collection("messages").add(
+            hashMapOf("text" to trimmed, "senderId" to userId, "role" to "admin", "timestamp" to ts)
         ).addOnFailureListener { Log.w(TAG, "sendAdminReply failed", it) }
+        // Обновляем родительский документ (для обновления превью в списке клиентов)
+        db.collection("chats").document(key).set(
+            hashMapOf("lastMessage" to "✓ $trimmed", "lastTimestamp" to ts),
+            com.google.firebase.firestore.SetOptions.merge()
+        )
     }
 
     // ─── Инициализация ───────────────────────────────────────────────────────────
