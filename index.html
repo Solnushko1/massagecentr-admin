@@ -245,6 +245,7 @@ body{font-family:'Roboto',sans-serif;background:#F5F5F5;color:#212121;display:fl
   font-size:13px;font-weight:700;cursor:pointer;text-align:center;
   font-family:inherit;transition:background .15s;letter-spacing:.3px;
   display:flex;align-items:center;justify-content:center;gap:6px;
+  text-decoration:none;
 }
 .btn-act-g{background:var(--green);color:#fff}
 .btn-act-g:hover{background:var(--green-d)}
@@ -264,6 +265,31 @@ body{font-family:'Roboto',sans-serif;background:#F5F5F5;color:#212121;display:fl
 .admin-banner.show{display:block}
 .admin-banner-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:4px}
 .admin-banner-sub{font-size:12px;color:var(--text2);margin-bottom:12px}
+
+/* Аккордеон документов */
+.acc-header{
+  display:flex;align-items:center;padding:14px 16px;
+  cursor:pointer;user-select:none;background:#fff;
+  transition:background .15s;
+}
+.acc-header:active{background:#f5f5f5}
+.acc-title{font-size:14px;font-weight:700;color:var(--text1);flex:1}
+.acc-arrow{font-size:13px;color:var(--text2);transition:transform .25s;display:inline-block}
+.acc-arrow.open{transform:rotate(180deg)}
+.acc-body{
+  overflow:hidden;max-height:0;
+  transition:max-height .3s ease;background:#fafafa;
+}
+.acc-body.open{max-height:1000px}
+.acc-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 16px;border-bottom:1px solid #f0f0f0;
+  text-decoration:none;
+}
+.acc-item:last-child{border-bottom:none}
+.acc-item:active{background:#f0f0f0}
+.acc-item-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.acc-item-text{font-size:13px;color:var(--teal);line-height:1.4;font-weight:500}
 
 /* ═══════════════════════════════════════
    CHAT
@@ -918,24 +944,81 @@ function renderSvc() {
 }
 
 // ── CONTACTS ─────────────────────────────────────
+const GOV_DOCS = [
+  ['Программа гос. гарантий бесплатного оказания мед. помощи',
+   'https://drive.google.com/file/d/1ZGwmG0PaSNiQTzE1jIiZCxvlyiBGOPkV/view?usp=sharing'],
+  ['Программа гос. гарантий Калужской области',
+   'https://drive.google.com/file/d/1SkOfrIrN88xq8z_lETkW5RZvP87KTB_d/view?usp=sharing'],
+  ['Информация о порядке предоставления мед. услуг и их оплате',
+   'https://docs.google.com/document/d/1KAEnXH2iEHwxbqnvSXDC7MUd72m4gdv6/edit?usp=sharing'],
+  ['Перечень определённых видов вмешательств',
+   'https://docs.google.com/document/d/19gEdI1tX-xVIfmugTRl3SBpxChdM_VJV/edit?usp=sharing'],
+  ['Решение конфликтных ситуаций',
+   'https://docs.google.com/document/d/1_gsx_Fu-AydYyXVUDG6FrsUVW6zbFZ7j/edit?usp=sharing'],
+  ['Сроки ожидания',
+   'https://docs.google.com/document/d/1dq5RBbmNuHgvguuV4mFB2U2AJAzJrJZl/edit?usp=sharing'],
+  ['Контакты органов здравоохранения',
+   'https://docs.google.com/document/d/1FQXYI4qMXmo5N3If_BT5UG5w9BUCqfDv/edit?usp=sharing'],
+];
+const FORM_DOCS = [
+  ['Согласие на обработку персональных данных',
+   'https://docs.google.com/document/d/1cejpz8n_aOkEUzxb2HTXE2Sdf5Hm-A4k/edit?usp=sharing'],
+  ['Договор на оказание платных медицинских услуг',
+   'https://docs.google.com/document/d/1piixnYqePFO1SH0659_AQmYIHSsiIkK9/edit?usp=sharing'],
+  ['Дополнительное соглашение к договору',
+   'https://docs.google.com/document/d/13a1LsmrcGrQmdWu_7E-vn85sadI8LKeU/edit?usp=sharing'],
+  ['Отказ от видов медицинских вмешательств',
+   'https://docs.google.com/document/d/1NnLg8H0LItr8yfw3p0eIIDWGfqU3FjR8/edit?usp=sharing'],
+  ['Информированное добровольное согласие',
+   'https://docs.google.com/document/d/1lDDlS5guKAzgG-AR_DOCy-FNxInl0raB/edit?usp=sharing'],
+  ['Акт выполненных услуг',
+   'https://docs.google.com/spreadsheets/d/19yWaUIIqOVzPUOZSPhDos_4ckPeb0ji4/edit?usp=sharing'],
+];
+
+function makeAccordion(id, title, icon, items) {
+  return `
+    <div class="info-section" style="overflow:hidden">
+      <div class="acc-header" onclick="toggleAcc('${id}')">
+        <span class="acc-title">${icon} ${title}</span>
+        <span class="acc-arrow" id="arr-${id}">▼</span>
+      </div>
+      <div class="acc-body" id="acc-${id}">
+        ${items.map(([name, url]) => `
+          <a class="acc-item" href="${esc(url)}" target="_blank" rel="noopener">
+            <span class="acc-item-icon">📄</span>
+            <span class="acc-item-text">${esc(name)}</span>
+          </a>`).join('')}
+      </div>
+    </div>`;
+}
+
+function toggleAcc(id) {
+  const body  = document.getElementById('acc-' + id);
+  const arrow = document.getElementById('arr-' + id);
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
 function loadContacts() {
   db.collection('app_settings').doc('contact').get()
     .then(doc => renderContacts(doc.exists ? doc.data() : {}))
     .catch(()  => renderContacts({}));
 }
+
 function renderContacts(d) {
-  const ph1  = d.phone1   || '+7 (930) 754-02-04';
-  const ph2  = d.phone2   || '+7 (4842) 40-02-04';
-  const em   = d.email    || 'kaluga.8za@gmail.com';
-  const addr = d.address  || 'г. Калуга, ул. Ленина, д. 1';
-  const hrs  = d.hours    || 'Пн–Чт: 10:00–19:00\nПт–Сб: выходной\nВс: 10:00–19:00';
-  const about= d.about    || '';
+  const ph1  = d.phone1  || '+7 (930) 754-02-04';
+  const ph2  = d.phone2  || '+7 (4842) 40-02-04';
+  const em   = d.email   || 'kaluga.8za@gmail.com';
+  const addr = d.address || 'г. Калуга, ул. Ленина, д. 1';
+  const hrs  = d.hours   || 'Пн–Чт: 10:00–19:00\nПт–Сб: выходной\nВс: 10:00–19:00';
+  const about= d.about   || '';
 
   const adminBlock = S.isAdmin ? `
     <div class="admin-banner show">
       <div class="admin-banner-title">⚙ Панель администратора</div>
       <div class="admin-banner-sub">Управление услугами, новостями и чатами</div>
-      <button class="btn-act btn-act-g" onclick="window.open('https://massagecentr-admin.vercel.app/admin','_blank')">
+      <button class="btn-act btn-act-g"
+        onclick="window.open('https://massagecentr-admin.vercel.app/admin','_blank')">
         🔧 Открыть панель
       </button>
     </div>` : '';
@@ -950,7 +1033,7 @@ function renderContacts(d) {
     ${adminBlock}
     ${aboutBlock}
     <div class="info-section">
-      <div class="info-section-title">Телефоны</div>
+      <div class="info-section-title">Контакты</div>
       <div class="info-row">
         <div class="info-icon">📱</div>
         <div class="info-text-wrap">
@@ -973,8 +1056,8 @@ function renderContacts(d) {
         </div>
       </div>
       <div class="info-actions">
-        <button class="btn-act btn-act-g" onclick="window.location='tel:${esc(ph1)}'">📞 Позвонить</button>
-        <button class="btn-act btn-act-o" onclick="window.location='mailto:${esc(em)}'">✉️ Написать</button>
+        <a class="btn-act btn-act-g" href="tel:${esc(ph1)}">📞 Позвонить</a>
+        <a class="btn-act btn-act-o" href="mailto:${esc(em)}?subject=Обращение">✉️ Написать</a>
       </div>
     </div>
     <div class="info-section">
@@ -996,7 +1079,10 @@ function renderContacts(d) {
     <div class="info-section">
       <div class="info-section-title">Часы работы</div>
       <div class="hours-pre">${esc(hrs)}</div>
-    </div>`;
+    </div>
+    ${makeAccordion('govDocs', 'Государственные гарантии', '📋', GOV_DOCS)}
+    ${makeAccordion('forms',   'Формы для пациентов',      '📝', FORM_DOCS)}
+  `;
 }
 
 // ── CHAT ─────────────────────────────────────────
