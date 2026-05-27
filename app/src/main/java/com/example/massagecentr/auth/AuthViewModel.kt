@@ -143,6 +143,53 @@ class AuthViewModel : ViewModel() {
 
     fun getCurrentEmail(): String = MassageCentrApp.session.email.ifBlank { lastEmail }
 
+    /** Вход администратора через Firebase Email/Password (для веб-панели и приложения) */
+    fun loginAsAdmin(email: String, password: String) {
+        val trimmed = email.trim().lowercase()
+        if (trimmed.isBlank() || password.isBlank()) {
+            _state.value = AuthState.Error("Введите email и пароль.")
+            return
+        }
+        _state.value = AuthState.Loading
+        viewModelScope.launch {
+            try {
+                auth.signInWithEmailAndPassword(trimmed, password).await()
+
+                val emailKey = SessionManager.emailToKey(trimmed)
+
+                // Проверяем, что email действительно администратора
+                val adminDoc = db.collection("admins").document(emailKey).get().await()
+                if (!adminDoc.exists()) {
+                    auth.signOut()
+                    _state.value = AuthState.Error("Этот аккаунт не является администратором.")
+                    return@launch
+                }
+
+                MassageCentrApp.session.email    = trimmed
+                MassageCentrApp.session.emailKey = emailKey
+                MassageCentrApp.session.isAdmin  = true
+
+                // Создаём профиль администратора, если его ещё нет
+                val user = userRepository.getUser(emailKey)
+                if (user == null) {
+                    userRepository.saveUser(emailKey, trimmed, "Администратор")
+                }
+                _state.value = AuthState.LoggedIn
+            } catch (e: Exception) {
+                val msg = when {
+                    e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true ||
+                    e.message?.contains("wrong-password") == true ||
+                    e.message?.contains("user-not-found") == true ->
+                        "Неверный email или пароль"
+                    e.message?.contains("too-many-requests") == true ->
+                        "Слишком много попыток. Подождите немного."
+                    else -> e.message ?: "Ошибка входа"
+                }
+                _state.value = AuthState.Error(msg)
+            }
+        }
+    }
+
     // ── HTTP helper ─────────────────────────────────────────────────────────────
 
     private suspend fun httpPost(path: String, jsonBody: String): JSONObject =

@@ -193,6 +193,25 @@
                 android:gravity="center"
                 android:visibility="gone" />
 
+            <!-- Разделитель + кнопка входа администратора -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAdminLogin"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="⚙ Войти как администратор"
+                app:strokeColor="@color/primary"
+                android:textColor="@color/primary"
+                android:textSize="13sp"
+                app:cornerRadius="10dp" />
+
         </LinearLayout>
     </ScrollView>
 
