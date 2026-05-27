@@ -5,11 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#8DC63F">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Центр 8 за">
 <title>Медицинский центр «8 за»</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/app/src/main/res/drawable/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -17,524 +19,565 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-/* ── RESET & BASE ─────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overflow: hidden; }
-body {
-  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #F7FAF5; color: #222;
-  display: flex; flex-direction: column;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Roboto',sans-serif;background:#F5F5F5;color:#212121;display:flex;flex-direction:column}
+
+:root{
+  --green:#8DC63F;
+  --green-d:#6fa030;
+  --teal:#00BCD4;
+  --teal-d:#0097a7;
+  --bg:#F5F5F5;
+  --card:#FFFFFF;
+  --divider:#E0E0E0;
+  --text1:#212121;
+  --text2:#757575;
+  --hint:#BDBDBD;
+  --err:#D32F2F;
+  --nav:60px;
+  --bar:56px;
 }
 
-/* ── CSS VARS ─────────────────────────────────────── */
-:root {
-  --primary: #8DC63F;
-  --primary-dark: #6fa030;
-  --accent: #00BCD4;
-  --accent-dark: #0097a7;
-  --bg: #F7FAF5;
-  --surface: #fff;
-  --border: #e0e0e0;
-  --text: #222;
-  --text-secondary: #666;
-  --text-hint: #aaa;
-  --error: #e53935;
-  --nav-height: 64px;
-  --topbar-height: 56px;
-}
+/* ═══════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════ */
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden}
+.screen.active{display:flex}
 
-/* ── SCREENS ──────────────────────────────────────── */
-.screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
-.screen.active { display: flex; }
-
-/* ══════════════════════════════════════════
-   AUTH SCREEN
-══════════════════════════════════════════ */
-#authScreen {
-  background: linear-gradient(160deg, #8DC63F 0%, #00BCD4 100%);
-  align-items: center; justify-content: center;
-  padding: 20px; overflow-y: auto;
+/* ═══════════════════════════════════════
+   AUTH
+═══════════════════════════════════════ */
+#authScreen{
+  align-items:center;justify-content:center;
+  background:linear-gradient(150deg,#8DC63F 0%,#00BCD4 100%);
+  padding:20px;overflow-y:auto;
 }
-.auth-card {
-  background: var(--surface); border-radius: 20px;
-  padding: 32px 28px; width: 100%; max-width: 400px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+.auth-card{
+  background:#fff;border-radius:16px;padding:28px 24px;
+  width:100%;max-width:380px;
+  box-shadow:0 8px 32px rgba(0,0,0,.22);
 }
-.auth-logo { text-align: center; margin-bottom: 24px; }
-.auth-logo img { height: 64px; object-fit: contain; }
-.auth-logo h1 { font-size: 17px; color: #333; margin-top: 10px; font-weight: 600; line-height: 1.3; }
-.auth-logo p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.auth-logo{text-align:center;margin-bottom:20px}
+.auth-logo img{height:60px;object-fit:contain}
+.auth-logo h1{font-size:16px;font-weight:700;color:#333;margin-top:8px;line-height:1.3}
+.auth-logo p{font-size:12px;color:#888;margin-top:3px}
 
-.auth-step { display: none; }
-.auth-step.active { display: block; }
+.auth-step{display:none}
+.auth-step.active{display:block}
 
-.field-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; display: block; font-weight: 500; }
-.field-input {
-  width: 100%; padding: 13px 16px; border: 1.5px solid var(--border);
-  border-radius: 12px; font-size: 16px; outline: none;
-  transition: border-color .2s; background: #fafafa;
-  -webkit-appearance: none;
+.flabel{font-size:12px;color:#666;margin-bottom:5px;display:block;font-weight:500;letter-spacing:.3px}
+.finput{
+  width:100%;padding:12px 14px;border:1.5px solid #ddd;
+  border-radius:8px;font-size:15px;outline:none;font-family:inherit;
+  background:#fafafa;transition:border-color .2s;
 }
-.field-input:focus { border-color: var(--primary); background: #fff; }
-.field-group { margin-bottom: 18px; }
+.finput:focus{border-color:var(--green);background:#fff}
+.fgroup{margin-bottom:16px}
 
-.btn-primary {
-  width: 100%; padding: 14px; background: var(--primary); color: #fff;
-  border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
-  cursor: pointer; transition: background .2s; margin-top: 4px;
+.btn-g{
+  width:100%;padding:13px;background:var(--green);color:#fff;
+  border:none;border-radius:8px;font-size:15px;font-weight:700;
+  cursor:pointer;letter-spacing:.3px;transition:background .15s;
+  font-family:inherit;
 }
-.btn-primary:hover { background: var(--primary-dark); }
-.btn-primary:disabled { background: #bbb; cursor: not-allowed; }
+.btn-g:hover{background:var(--green-d)}
+.btn-g:disabled{background:#bbb;cursor:not-allowed}
+.btn-outline-g{
+  width:100%;padding:12px;background:transparent;
+  border:1.5px solid var(--green);border-radius:8px;
+  font-size:14px;font-weight:600;color:var(--green);
+  cursor:pointer;margin-top:10px;font-family:inherit;
+  transition:background .15s;
+}
+.btn-outline-g:hover{background:#f1f8e9}
+.btn-link{
+  background:none;border:none;color:var(--green);
+  font-size:13px;cursor:pointer;padding:8px 0;
+  display:block;margin:0 auto;text-decoration:underline;
+  font-family:inherit;
+}
+.auth-hint{font-size:13px;color:#666;text-align:center;margin-bottom:14px;line-height:1.5}
+.auth-err{color:var(--err);font-size:12px;margin-top:6px;text-align:center;min-height:16px}
+.otp-inp{text-align:center;font-size:30px;font-weight:700;letter-spacing:10px}
 
-.btn-text {
-  background: none; border: none; color: var(--primary);
-  font-size: 14px; cursor: pointer; padding: 8px 0;
-  text-decoration: underline; display: block; margin: 0 auto;
-}
-.btn-outline {
-  width: 100%; padding: 13px; background: transparent;
-  border: 1.5px solid var(--primary); border-radius: 12px;
-  font-size: 15px; font-weight: 600; color: var(--primary);
-  cursor: pointer; margin-top: 10px;
-}
-.btn-outline:hover { background: #f1f8e9; }
+/* ═══════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════ */
+#appScreen.active{display:flex;flex-direction:column;flex:1;overflow:hidden}
 
-.auth-err { color: var(--error); font-size: 13px; margin-top: 8px; text-align: center; min-height: 18px; }
-.auth-hint { color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; text-align: center; line-height: 1.5; }
-
-.otp-input {
-  text-align: center; font-size: 28px; font-weight: 700;
-  letter-spacing: 10px; width: 100%;
+/* Topbar — зелёная как в приложении */
+.topbar{
+  height:var(--bar);background:var(--green);
+  display:flex;align-items:center;padding:0 8px 0 16px;
+  flex-shrink:0;
+  box-shadow:0 2px 6px rgba(0,0,0,.25);
+  position:relative;z-index:10;
 }
-
-/* ══════════════════════════════════════════
-   MAIN APP
-══════════════════════════════════════════ */
-#appScreen { flex: 1; overflow: hidden; }
-#appScreen.active { display: flex; flex-direction: column; }
-
-/* Top bar */
-.topbar {
-  height: var(--topbar-height); background: var(--surface);
-  display: flex; align-items: center; padding: 0 16px;
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  position: relative; flex-shrink: 0; z-index: 10;
+.topbar-title{font-size:18px;font-weight:700;color:#fff;flex:1;letter-spacing:.2px}
+.topbar-logo{height:30px;object-fit:contain;margin-right:10px;filter:brightness(0) invert(1)}
+.btn-topbar{
+  background:none;border:none;color:rgba(255,255,255,.9);
+  font-size:22px;cursor:pointer;padding:8px;border-radius:50%;
+  transition:background .15s;
 }
-.topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex: 1; }
-.topbar-logo { height: 34px; object-fit: contain; margin-right: 10px; }
-.btn-icon {
-  background: none; border: none; cursor: pointer;
-  font-size: 20px; padding: 8px; border-radius: 50%;
-  color: var(--text-secondary); transition: background .15s;
-}
-.btn-icon:hover { background: #f0f0f0; }
+.btn-topbar:hover{background:rgba(0,0,0,.1)}
 
 /* Tab pages */
-.tab-page { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
-.tab-page.active { display: flex; }
+.tab-page{display:none;flex:1;overflow-y:auto;flex-direction:column;overscroll-behavior:contain}
+.tab-page.active{display:flex}
 
-/* ── Bottom nav ──────────────────────────────── */
-.bottom-nav {
-  height: var(--nav-height); background: var(--surface);
-  border-top: 1px solid var(--border);
-  display: flex; align-items: stretch;
-  flex-shrink: 0;
-  box-shadow: 0 -1px 6px rgba(0,0,0,0.08);
+/* Bottom nav — белая как в приложении */
+.bottom-nav{
+  height:var(--nav);background:#fff;border-top:1px solid var(--divider);
+  display:flex;align-items:stretch;flex-shrink:0;
+  box-shadow:0 -2px 8px rgba(0,0,0,.08);
 }
-.nav-btn {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 4px;
-  background: none; border: none; cursor: pointer;
-  color: var(--text-hint); transition: color .15s; padding: 6px 2px;
-  font-size: 10px; font-weight: 500;
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  background:none;border:none;cursor:pointer;
+  color:var(--hint);transition:color .15s;padding:4px 2px;
+  font-size:10px;font-weight:500;font-family:inherit;
 }
-.nav-btn .nav-icon { font-size: 22px; line-height: 1; }
-.nav-btn.active { color: var(--primary); }
-.nav-btn.hidden { display: none; }
+.nav-btn svg{width:24px;height:24px;fill:currentColor}
+.nav-btn.active{color:var(--green)}
+.nav-btn.hidden{display:none}
 
-/* ══════════════════════════════════════════
-   HOME / NEWS TAB
-══════════════════════════════════════════ */
-.section-header {
-  padding: 14px 16px 6px; font-size: 16px; font-weight: 700; color: var(--text);
-}
-.news-list { padding: 0 12px 80px; display: flex; flex-direction: column; gap: 12px; }
-.news-card {
-  background: var(--surface); border-radius: 14px;
-  overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  cursor: pointer; transition: transform .15s, box-shadow .15s;
-}
-.news-card:active { transform: scale(.98); }
-.news-card img { width: 100%; height: 160px; object-fit: cover; display: block; background: #e8f5e9; }
-.news-card-body { padding: 14px; }
-.news-card-date { font-size: 12px; color: var(--accent); margin-bottom: 6px; font-weight: 500; }
-.news-card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.35; }
-.news-card-preview { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
-.news-card-more { font-size: 13px; color: var(--primary); font-weight: 600; margin-top: 6px; }
-.empty-state { text-align: center; padding: 60px 24px; color: var(--text-hint); font-size: 15px; }
-.spinner { text-align: center; padding: 40px; color: var(--text-hint); font-size: 14px; }
+/* ═══════════════════════════════════════
+   HOME / NEWS
+═══════════════════════════════════════ */
+#tabHome{background:#F5F5F5}
+.news-list{padding:8px 8px 70px;display:flex;flex-direction:column;gap:10px}
 
-/* ══════════════════════════════════════════
-   SERVICES TAB
-══════════════════════════════════════════ */
-.chips-row {
-  display: flex; gap: 8px; padding: 10px 12px 6px;
-  overflow-x: auto; flex-shrink: 0;
-  scrollbar-width: none;
+.news-card{
+  background:#fff;border-radius:4px;overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.14);
+  cursor:pointer;transition:box-shadow .2s;
 }
-.chips-row::-webkit-scrollbar { display: none; }
-.chip {
-  flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
-  border: 1.5px solid var(--border); font-size: 13px;
-  background: #fff; cursor: pointer; transition: all .15s;
-  white-space: nowrap;
-}
-.chip.active { border-color: var(--primary); color: var(--primary); background: #f1f8e9; }
-.services-list { padding: 0 12px 80px; display: flex; flex-direction: column; gap: 8px; }
-.service-card {
-  background: var(--surface); border-radius: 12px;
-  padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-}
-.service-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-.service-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.badge {
-  padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
-}
-.badge-price { background: #f1f8e9; color: #4a7c1a; }
-.badge-duration { background: #e3f2fd; color: #1565c0; }
-.badge-cat { background: #fce4ec; color: #ad1457; font-size: 11px; }
+.news-card:active{box-shadow:0 4px 8px rgba(0,0,0,.2)}
 
-/* ══════════════════════════════════════════
-   CONTACTS TAB
-══════════════════════════════════════════ */
-.info-scroll { padding: 12px 12px 80px; display: flex; flex-direction: column; gap: 12px; }
-.info-card {
-  background: var(--surface); border-radius: 14px;
-  padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+/* Изображение новости */
+.news-img-wrap{
+  width:100%;height:180px;overflow:hidden;
+  background:linear-gradient(135deg,#c5e48a,#80deea);
+  position:relative;display:flex;align-items:center;justify-content:center;
 }
-.info-card-title {
-  font-size: 13px; color: var(--text-secondary); font-weight: 600;
-  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px;
+.news-img-wrap img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  position:absolute;top:0;left:0;
 }
-.info-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-.info-row:last-child { margin-bottom: 0; }
-.info-icon { font-size: 20px; flex-shrink: 0; }
-.info-text { font-size: 14px; line-height: 1.45; flex: 1; }
-.info-text a { color: var(--primary); text-decoration: none; font-weight: 500; }
-.btn-action {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 13px; border-radius: 12px; border: none;
-  font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px;
-  transition: background .15s;
+.news-img-placeholder{
+  font-size:48px;opacity:.35;user-select:none;
 }
-.btn-call { background: var(--primary); color: #fff; }
-.btn-call:hover { background: var(--primary-dark); }
-.btn-map { background: var(--accent); color: #fff; }
-.btn-map:hover { background: var(--accent-dark); }
-.btn-email-action { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); }
-.hours-text { font-size: 14px; white-space: pre-line; line-height: 1.8; color: var(--text); }
+.news-card-body{padding:12px 14px 14px}
+.news-card-date{font-size:11px;color:var(--teal);font-weight:500;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.news-card-title{font-size:15px;font-weight:700;color:var(--text1);line-height:1.35;margin-bottom:6px}
+.news-card-preview{font-size:13px;color:var(--text2);line-height:1.5}
+.news-read-more{font-size:13px;color:var(--green);font-weight:600;margin-top:6px}
 
-/* Admin card in contacts */
-.admin-card-info {
-  background: linear-gradient(135deg, #f1f8e9, #e8f5e9);
-  border: 1.5px solid var(--primary); border-radius: 14px;
-  padding: 16px; display: none;
-}
-.admin-card-info.visible { display: block; }
-.admin-card-title { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
-.admin-card-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.spinner{text-align:center;padding:40px 20px;color:var(--hint);font-size:14px}
+.empty{text-align:center;padding:60px 20px;color:var(--hint);font-size:15px}
+.empty-icon{font-size:48px;margin-bottom:12px}
 
-/* ══════════════════════════════════════════
-   CHAT TAB
-══════════════════════════════════════════ */
-#tabChat { overflow: hidden; }
-.chat-wrap { flex: 1; display: flex; overflow: hidden; }
+/* ═══════════════════════════════════════
+   SERVICES
+═══════════════════════════════════════ */
+#tabServices{background:#F5F5F5}
+.chips-bar{
+  background:#fff;padding:10px 8px;
+  display:flex;gap:6px;overflow-x:auto;flex-shrink:0;
+  scrollbar-width:none;border-bottom:1px solid var(--divider);
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+.chips-bar::-webkit-scrollbar{display:none}
+.chip{
+  flex-shrink:0;padding:6px 14px;border-radius:16px;
+  border:1.5px solid var(--divider);font-size:12px;font-weight:500;
+  background:#fff;cursor:pointer;transition:all .15s;
+  white-space:nowrap;font-family:inherit;color:#555;
+}
+.chip.active{border-color:var(--green);color:var(--green);background:#f1f8e9}
+.services-list{padding:8px 8px 70px;display:flex;flex-direction:column;gap:1px}
 
-/* Client chat */
-.chat-single { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.chat-messages {
-  flex: 1; overflow-y: auto; padding: 12px;
-  display: flex; flex-direction: column; gap: 8px;
+.svc-group-header{
+  padding:14px 14px 6px;font-size:12px;font-weight:700;
+  color:var(--text2);text-transform:uppercase;letter-spacing:.8px;
 }
-.msg { max-width: 75%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.45; }
-.msg-out { background: var(--primary); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-.msg-in  { background: #e3f2fd; color: #111; align-self: flex-start; border-bottom-left-radius: 4px; }
-.msg-label { font-size: 10px; font-weight: 700; margin-bottom: 3px; opacity: .75; }
-.msg-time  { font-size: 10px; margin-top: 4px; text-align: right; opacity: .65; }
-.chat-input-bar {
-  display: flex; align-items: flex-end; gap: 8px;
-  padding: 10px 12px 14px; background: var(--surface);
-  border-top: 1px solid var(--border);
+.svc-card{
+  background:#fff;padding:14px 16px;
+  border-bottom:1px solid #f0f0f0;
 }
-.chat-textarea {
-  flex: 1; padding: 10px 14px; border: 1.5px solid var(--border);
-  border-radius: 22px; font-size: 15px; resize: none;
-  outline: none; font-family: inherit; max-height: 100px;
-  background: #fafafa; transition: border-color .2s;
-  line-height: 1.4;
+.svc-card:last-child{border-bottom:none}
+.svc-name{font-size:14px;font-weight:500;color:var(--text1);margin-bottom:7px;line-height:1.35}
+.svc-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;
 }
-.chat-textarea:focus { border-color: var(--accent); background: #fff; }
-.btn-send {
-  background: var(--accent); color: #fff; border: none;
-  border-radius: 50%; width: 44px; height: 44px; font-size: 18px;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: background .15s;
+.pill-price{background:#E8F5E9;color:#2E7D32}
+.pill-dur{background:#E3F2FD;color:#1565C0}
+
+/* ═══════════════════════════════════════
+   CONTACTS
+═══════════════════════════════════════ */
+#tabContacts{background:#F5F5F5}
+.info-wrap{padding:8px 8px 70px;display:flex;flex-direction:column;gap:8px}
+
+.info-section{
+  background:#fff;border-radius:4px;overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.1);
 }
-.btn-send:hover { background: var(--accent-dark); }
-.chat-empty-msg {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  color: var(--text-hint); font-size: 15px; text-align: center; padding: 20px;
+.info-section-title{
+  padding:12px 16px 0;font-size:11px;font-weight:700;
+  color:var(--teal);text-transform:uppercase;letter-spacing:.8px;
+}
+.info-row{
+  display:flex;align-items:center;padding:12px 16px;
+  border-bottom:1px solid #f5f5f5;gap:14px;
+}
+.info-row:last-child{border-bottom:none}
+.info-icon{width:36px;height:36px;border-radius:50%;background:#F5F5F5;
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.info-text-wrap{flex:1}
+.info-label{font-size:11px;color:var(--text2);margin-bottom:2px}
+.info-val{font-size:14px;color:var(--text1);font-weight:500;line-height:1.4}
+.info-val a{color:var(--green);text-decoration:none}
+.info-actions{padding:8px 12px 12px;display:flex;gap:8px;flex-wrap:wrap}
+.btn-act{
+  flex:1;min-width:120px;padding:11px 8px;border-radius:4px;border:none;
+  font-size:13px;font-weight:700;cursor:pointer;text-align:center;
+  font-family:inherit;transition:background .15s;letter-spacing:.3px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-act-g{background:var(--green);color:#fff}
+.btn-act-g:hover{background:var(--green-d)}
+.btn-act-t{background:var(--teal);color:#fff}
+.btn-act-t:hover{background:var(--teal-d)}
+.btn-act-o{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+.btn-act-o:hover{background:#f1f8e9}
+.hours-pre{font-size:14px;line-height:1.9;white-space:pre-line;color:var(--text1);padding:12px 16px}
+
+.admin-banner{
+  background:linear-gradient(135deg,#f1f8e9,#e8f5e9);
+  border:1.5px solid var(--green);border-radius:4px;
+  padding:14px 16px;
+  box-shadow:0 1px 3px rgba(0,0,0,.1);
+  display:none;
+}
+.admin-banner.show{display:block}
+.admin-banner-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:4px}
+.admin-banner-sub{font-size:12px;color:var(--text2);margin-bottom:12px}
+
+/* ═══════════════════════════════════════
+   CHAT
+═══════════════════════════════════════ */
+#tabChat{overflow:hidden;background:#fff}
+.chat-wrap{flex:1;display:flex;overflow:hidden}
+
+/* Client */
+.chat-single{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#F5F5F5}
+.chat-messages{
+  flex:1;overflow-y:auto;padding:10px 10px 6px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.bubble{
+  max-width:75%;padding:9px 13px;border-radius:18px;
+  font-size:14px;line-height:1.45;word-break:break-word;
+}
+.bubble-out{
+  background:var(--green);color:#fff;
+  align-self:flex-end;border-bottom-right-radius:4px;
+}
+.bubble-in{
+  background:#fff;color:#212121;
+  align-self:flex-start;border-bottom-left-radius:4px;
+  box-shadow:0 1px 2px rgba(0,0,0,.1);
+}
+.bubble-label{font-size:10px;font-weight:700;margin-bottom:3px;opacity:.8}
+.bubble-time{font-size:10px;margin-top:4px;text-align:right;opacity:.6}
+.chat-empty{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  color:var(--hint);text-align:center;padding:24px;gap:10px;
+}
+.chat-empty-icon{font-size:48px}
+.chat-empty-txt{font-size:14px}
+.chat-bar{
+  display:flex;align-items:flex-end;gap:8px;
+  padding:8px 10px 12px;background:#fff;
+  border-top:1px solid var(--divider);
+}
+.chat-ta{
+  flex:1;padding:10px 14px;border:1.5px solid var(--divider);
+  border-radius:22px;font-size:14px;resize:none;outline:none;
+  font-family:inherit;max-height:100px;background:#fafafa;
+  line-height:1.4;transition:border-color .2s;
+}
+.chat-ta:focus{border-color:var(--teal);background:#fff}
+.btn-send{
+  background:var(--green);color:#fff;border:none;
+  border-radius:50%;width:44px;height:44px;font-size:20px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .15s;
+}
+.btn-send:hover{background:var(--green-d)}
+
+/* Admin split */
+.conv-panel{
+  width:250px;border-right:1px solid var(--divider);
+  overflow-y:auto;flex-shrink:0;background:#fff;
+}
+@media(max-width:540px){
+  .conv-panel{width:96px}
+  .conv-email,.conv-prev{display:none}
+}
+.conv-hdr{
+  padding:12px 14px;font-size:11px;font-weight:700;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--divider);
+  background:#FAFAFA;
+}
+.conv-item{
+  padding:11px 13px;border-bottom:1px solid #f5f5f5;
+  cursor:pointer;transition:background .12s;
+}
+.conv-item:hover{background:#f9fff9}
+.conv-item.active{background:#f1f8e9;border-left:3px solid var(--green)}
+.conv-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-email{font-size:11px;color:var(--hint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.conv-prev{font-size:11px;color:var(--hint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+
+/* ═══════════════════════════════════════
+   MODAL SHEET
+═══════════════════════════════════════ */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.5);z-index:300;
+  align-items:flex-end;justify-content:center;
+}
+.overlay.open{display:flex}
+.sheet{
+  background:#fff;border-radius:16px 16px 0 0;
+  width:100%;max-width:640px;max-height:88vh;
+  overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);
+  animation:slideUp .22s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:10px auto 0}
+.sheet-title{font-size:17px;font-weight:700;padding:14px 16px 0;color:var(--text1)}
+.sheet-date{font-size:12px;color:var(--teal);font-weight:500;padding:6px 16px 0;text-transform:uppercase;letter-spacing:.5px}
+.sheet-body{padding:12px 16px 24px;font-size:15px;line-height:1.7;white-space:pre-line;color:var(--text1)}
+.sheet-close{
+  display:block;margin:0 16px 16px;padding:13px;
+  background:#F5F5F5;color:#555;border:none;border-radius:8px;
+  font-size:14px;font-weight:700;cursor:pointer;text-align:center;
+  width:calc(100% - 32px);font-family:inherit;
 }
 
-/* Admin chat split view */
-.conv-list {
-  width: 260px; border-right: 1px solid var(--border);
-  overflow-y: auto; flex-shrink: 0; background: var(--surface);
+/* ═══════════════════════════════════════
+   ADMIN DIALOG
+═══════════════════════════════════════ */
+.dialog-wrap{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.5);z-index:400;
+  align-items:center;justify-content:center;padding:16px;
 }
-@media (max-width: 600px) {
-  .conv-list { width: 110px; }
-  .conv-name { font-size: 12px; }
-  .conv-preview { display: none; }
+.dialog-wrap.open{display:flex}
+.dialog{
+  background:#fff;border-radius:12px;
+  width:100%;max-width:340px;padding:22px 20px;
+  box-shadow:0 12px 40px rgba(0,0,0,.22);
 }
-.conv-item {
-  padding: 12px 14px; border-bottom: 1px solid #f0f0f0;
-  cursor: pointer; transition: background .12s;
-}
-.conv-item:hover { background: #f8fff8; }
-.conv-item.active { background: #f1f8e9; border-left: 3px solid var(--primary); }
-.conv-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conv-email { font-size: 11px; color: var(--text-hint); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conv-preview { font-size: 11px; color: var(--text-hint); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dialog-title{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text1)}
+.dialog-err{color:var(--err);font-size:12px;margin-bottom:8px;text-align:center;min-height:16px}
 
-/* ══════════════════════════════════════════
-   MODAL
-══════════════════════════════════════════ */
-.modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.5); z-index: 300;
-  align-items: flex-end; justify-content: center;
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:calc(var(--nav) + 12px);left:50%;
+  transform:translateX(-50%) translateY(70px);
+  background:#323232;color:#fff;padding:9px 18px;
+  border-radius:20px;font-size:13px;z-index:500;
+  white-space:nowrap;transition:transform .25s,opacity .25s;opacity:0;
+  max-width:calc(100vw - 32px);text-align:center;
 }
-.modal-overlay.open { display: flex; }
-.modal-sheet {
-  background: var(--surface); border-radius: 20px 20px 0 0;
-  width: 100%; max-width: 600px; max-height: 85vh;
-  overflow-y: auto; padding: 0 0 env(safe-area-inset-bottom);
-  animation: slideUp .25s ease;
-}
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.modal-handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 10px auto 0; }
-.modal-title { font-size: 17px; font-weight: 700; padding: 14px 18px 0; }
-.modal-body  { padding: 14px 18px 24px; }
-.modal-date  { font-size: 13px; color: var(--accent); margin-bottom: 10px; font-weight: 500; }
-.modal-text  { font-size: 15px; line-height: 1.65; white-space: pre-line; color: var(--text); }
-.modal-close-btn {
-  display: block; margin: 0 18px 16px;
-  padding: 13px; background: #f0f0f0; color: #555;
-  border: none; border-radius: 12px; font-size: 15px;
-  font-weight: 600; cursor: pointer; text-align: center; width: calc(100% - 36px);
-}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.ok{background:#388E3C}
+#toast.err{background:#C62828}
 
-/* Admin login dialog */
-.dialog-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.5); z-index: 400;
-  align-items: center; justify-content: center; padding: 16px;
+/* Loading */
+#loader{
+  position:fixed;inset:0;background:rgba(255,255,255,.9);
+  display:flex;align-items:center;justify-content:center;
+  z-index:600;
 }
-.dialog-overlay.open { display: flex; }
-.dialog-card {
-  background: var(--surface); border-radius: 16px;
-  width: 100%; max-width: 360px; padding: 24px;
-  box-shadow: 0 10px 40px rgba(0,0,0,.2);
+#loader.off{display:none}
+.loader-spin{
+  width:40px;height:40px;border:4px solid #e0e0e0;
+  border-top-color:var(--green);border-radius:50%;
+  animation:spin .7s linear infinite;
 }
-.dialog-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
-.dialog-err { color: var(--error); font-size: 13px; margin-bottom: 10px; text-align: center; }
-
-/* ── TOAST ───────────────────────────────────────── */
-#toast {
-  position: fixed; bottom: calc(var(--nav-height) + 12px); left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: #323232; color: #fff; padding: 10px 20px;
-  border-radius: 24px; font-size: 14px; z-index: 500;
-  white-space: nowrap; transition: transform .25s, opacity .25s; opacity: 0;
-  max-width: calc(100vw - 32px); text-align: center;
-}
-#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-#toast.success { background: #388e3c; }
-#toast.error   { background: #c62828; }
-
-/* Loading overlay */
-#loadingOverlay {
-  position: fixed; inset: 0; background: rgba(255,255,255,.85);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 600; font-size: 28px;
-}
-#loadingOverlay.hidden { display: none; }
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════
-     LOADING
-═══════════════════════════════ -->
-<div id="loadingOverlay">⏳</div>
+<!-- LOADER -->
+<div id="loader"><div class="loader-spin"></div></div>
 
-<!-- ═══════════════════════════════
-     AUTH SCREEN
-═══════════════════════════════ -->
+<!-- ═══════════════════════════════════════
+     AUTH
+═══════════════════════════════════════ -->
 <div id="authScreen" class="screen">
   <div class="auth-card">
     <div class="auth-logo">
-      <img src="app/src/main/res/drawable/logo.png" alt="Логотип"
+      <img src="app/src/main/res/drawable/logo.png" alt=""
            onerror="this.style.display='none'">
-      <h1>Медицинский центр<br>«8 за»</h1>
+      <h1>Медицинский центр «8 за»</h1>
       <p>г. Калуга</p>
     </div>
 
-    <!-- Step 1: Email -->
-    <div id="authStepEmail" class="auth-step active">
-      <div class="field-group">
-        <label class="field-label">Ваш email</label>
-        <input id="inputEmail" class="field-input" type="email"
-               placeholder="example@mail.ru" autocomplete="email"
-               onkeydown="if(event.key==='Enter') sendOtp()">
+    <!-- Шаг 1: Email -->
+    <div id="stepEmail" class="auth-step active">
+      <div class="fgroup">
+        <label class="flabel">Email-адрес</label>
+        <input id="inpEmail" class="finput" type="email" placeholder="example@mail.ru"
+               autocomplete="email" onkeydown="if(event.key==='Enter')sendOtp()">
       </div>
-      <button class="btn-primary" onclick="sendOtp()">Получить код</button>
+      <button class="btn-g" onclick="sendOtp()">Получить код</button>
       <div id="errEmail" class="auth-err"></div>
-      <button class="btn-outline" style="margin-top:16px" onclick="openAdminDialog()">⚙ Войти как администратор</button>
+      <button class="btn-outline-g" onclick="openAdminDlg()">⚙ Войти как администратор</button>
     </div>
 
-    <!-- Step 2: OTP -->
-    <div id="authStepOtp" class="auth-step">
+    <!-- Шаг 2: OTP -->
+    <div id="stepOtp" class="auth-step">
       <p class="auth-hint" id="otpHint">Введите 6-значный код из письма</p>
-      <div class="field-group">
-        <input id="inputOtp" class="field-input otp-input" type="number"
+      <div class="fgroup">
+        <input id="inpOtp" class="finput otp-inp" type="number"
                placeholder="000000" maxlength="6" inputmode="numeric"
-               onkeydown="if(event.key==='Enter') verifyOtp()">
+               onkeydown="if(event.key==='Enter')verifyOtp()">
       </div>
-      <button class="btn-primary" onclick="verifyOtp()">Войти</button>
+      <button class="btn-g" onclick="verifyOtp()">Войти</button>
       <div id="errOtp" class="auth-err"></div>
-      <button class="btn-text" onclick="resendOtp()">Не пришло? Отправить ещё раз</button>
-      <button class="btn-text" onclick="goToEmailStep()">← Изменить email</button>
+      <button class="btn-link" onclick="resendOtp()">Не пришло письмо? Отправить ещё раз</button>
+      <button class="btn-link" onclick="gotoEmail()">← Изменить email</button>
     </div>
 
-    <!-- Step 3: Registration -->
-    <div id="authStepReg" class="auth-step">
-      <p class="auth-hint">Добро пожаловать! Введите ваше имя для регистрации.</p>
-      <div class="field-group">
-        <label class="field-label">Ваше имя</label>
-        <input id="inputName" class="field-input" type="text"
-               placeholder="Иван Иванов" autocomplete="name"
-               onkeydown="if(event.key==='Enter') registerUser()">
+    <!-- Шаг 3: Регистрация -->
+    <div id="stepReg" class="auth-step">
+      <p class="auth-hint">Добро пожаловать! Введите ваше имя.</p>
+      <div class="fgroup">
+        <label class="flabel">Ваше имя</label>
+        <input id="inpName" class="finput" type="text" placeholder="Иван Иванов"
+               autocomplete="name" onkeydown="if(event.key==='Enter')registerUser()">
       </div>
-      <button class="btn-primary" onclick="registerUser()">Зарегистрироваться</button>
+      <button class="btn-g" onclick="registerUser()">Зарегистрироваться</button>
       <div id="errReg" class="auth-err"></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════
-     MAIN APP
-═══════════════════════════════ -->
+<!-- ═══════════════════════════════════════
+     APP
+═══════════════════════════════════════ -->
 <div id="appScreen" class="screen">
 
-  <!-- Topbar -->
+  <!-- Топбар -->
   <div class="topbar">
     <img class="topbar-logo" src="app/src/main/res/drawable/logo.png" alt=""
          onerror="this.style.display='none'">
-    <span class="topbar-title" id="topbarTitle">Главная</span>
-    <button class="btn-icon" onclick="doLogout()" title="Выйти">⎋</button>
+    <span class="topbar-title" id="topTitle">Главная</span>
+    <button class="btn-topbar" onclick="doLogout()" title="Выйти">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="white">
+        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+      </svg>
+    </button>
   </div>
 
-  <!-- Tab pages -->
-
-  <!-- HOME -->
+  <!-- ГЛАВНАЯ -->
   <div id="tabHome" class="tab-page active">
-    <div class="section-header" id="homeHeader">Новости и акции</div>
-    <div id="newsList" class="news-list"><div class="spinner">Загрузка…</div></div>
+    <div id="newsList" class="news-list"><div class="spinner">⏳ Загрузка…</div></div>
   </div>
 
-  <!-- SERVICES -->
+  <!-- УСЛУГИ -->
   <div id="tabServices" class="tab-page">
-    <div id="chipsRow" class="chips-row"></div>
-    <div id="servicesList" class="services-list"><div class="spinner">Загрузка…</div></div>
+    <div id="chipsBar" class="chips-bar"></div>
+    <div id="svcList" class="services-list"><div class="spinner">⏳ Загрузка…</div></div>
   </div>
 
-  <!-- CONTACTS -->
+  <!-- КОНТАКТЫ -->
   <div id="tabContacts" class="tab-page">
-    <div class="info-scroll" id="infoScroll">
-      <div class="spinner">Загрузка…</div>
-    </div>
+    <div id="infoWrap" class="info-wrap"><div class="spinner">⏳ Загрузка…</div></div>
   </div>
 
-  <!-- CHAT -->
+  <!-- ЧАТ -->
   <div id="tabChat" class="tab-page">
-    <div class="chat-wrap" id="chatWrap">
-      <!-- filled dynamically -->
-    </div>
+    <div class="chat-wrap" id="chatWrap"></div>
   </div>
 
-  <!-- Bottom nav -->
+  <!-- Нижняя навигация -->
   <nav class="bottom-nav">
     <button class="nav-btn active" id="navHome" onclick="showTab('home')">
-      <span class="nav-icon">🏠</span>Главная
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      Главная
     </button>
     <button class="nav-btn" id="navServices" onclick="showTab('services')">
-      <span class="nav-icon">💆</span>Услуги
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      Услуги
     </button>
     <button class="nav-btn" id="navContacts" onclick="showTab('contacts')">
-      <span class="nav-icon">📍</span>Контакты
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      Контакты
     </button>
     <button class="nav-btn" id="navChat" onclick="showTab('chat')">
-      <span class="nav-icon">💬</span>Чат
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+      Чат
     </button>
   </nav>
 </div>
 
-<!-- ═══════════════════════════════
-     NEWS DETAIL MODAL
-═══════════════════════════════ -->
-<div class="modal-overlay" id="newsModal" onclick="if(event.target===this) closeNewsModal()">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="newsModalTitle"></div>
-    <div class="modal-body">
-      <div class="modal-date" id="newsModalDate"></div>
-      <div class="modal-text" id="newsModalText"></div>
-    </div>
-    <button class="modal-close-btn" onclick="closeNewsModal()">Закрыть</button>
+<!-- ═══════════════════════════════════════
+     МОДАЛ: детали новости
+═══════════════════════════════════════ -->
+<div class="overlay" id="newsOverlay" onclick="if(event.target===this)closeNews()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="newsTitle"></div>
+    <div class="sheet-date"  id="newsDate"></div>
+    <div class="sheet-body"  id="newsBody"></div>
+    <button class="sheet-close" onclick="closeNews()">Закрыть</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════
-     ADMIN LOGIN DIALOG
-═══════════════════════════════ -->
-<div class="dialog-overlay" id="adminDialog" onclick="if(event.target===this) closeAdminDialog()">
-  <div class="dialog-card">
+<!-- ═══════════════════════════════════════
+     ДИАЛОГ: вход администратора
+═══════════════════════════════════════ -->
+<div class="dialog-wrap" id="adminDlg" onclick="if(event.target===this)closeAdminDlg()">
+  <div class="dialog">
     <div class="dialog-title">⚙ Вход администратора</div>
-    <div class="field-group">
-      <label class="field-label">Email</label>
-      <input id="adminEmail" class="field-input" type="email" placeholder="admin@example.com">
+    <div class="fgroup">
+      <label class="flabel">Email</label>
+      <input id="dlgEmail" class="finput" type="email" placeholder="admin@example.com">
     </div>
-    <div class="field-group">
-      <label class="field-label">Пароль</label>
-      <input id="adminPassword" class="field-input" type="password" placeholder="••••••••"
-             onkeydown="if(event.key==='Enter') doAdminLogin()">
+    <div class="fgroup">
+      <label class="flabel">Пароль</label>
+      <input id="dlgPass" class="finput" type="password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')doAdminLogin()">
     </div>
-    <div id="adminDialogErr" class="dialog-err"></div>
-    <button class="btn-primary" onclick="doAdminLogin()">Войти</button>
-    <button class="modal-close-btn" style="margin-top:10px" onclick="closeAdminDialog()">Отмена</button>
+    <div id="dlgErr" class="dialog-err"></div>
+    <button class="btn-g" onclick="doAdminLogin()">Войти</button>
+    <button class="sheet-close" style="margin:10px 0 0" onclick="closeAdminDlg()">Отмена</button>
   </div>
 </div>
 
-<!-- Toast -->
 <div id="toast"></div>
 
-<!-- ═══════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════ -->
+<!-- ═══════════════════════════════════════
+     JS
+═══════════════════════════════════════ -->
 <script>
-// ── Firebase ──────────────────────────────────────────────────────────────────
+// ── Firebase ──────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyBBVV95bvyjbpYDtkKgmsG9gR1_qAK8-_0",
   authDomain:        "massage-centr.firebaseapp.com",
@@ -547,39 +590,31 @@ firebase.initializeApp(firebaseConfig);
 const db   = firebase.firestore();
 const auth = firebase.auth();
 
-// ── Session ───────────────────────────────────────────────────────────────────
-const session = {
-  get email()    { return localStorage.getItem('mc_email')    || ''; },
-  set email(v)   { localStorage.setItem('mc_email', v); },
-  get emailKey() { return localStorage.getItem('mc_emailKey') || ''; },
-  set emailKey(v){ localStorage.setItem('mc_emailKey', v); },
-  get name()     { return localStorage.getItem('mc_name')     || ''; },
-  set name(v)    { localStorage.setItem('mc_name', v); },
-  get isAdmin()  { return localStorage.getItem('mc_isAdmin') === '1'; },
-  set isAdmin(v) { localStorage.setItem('mc_isAdmin', v ? '1' : '0'); },
-  clear() { ['mc_email','mc_emailKey','mc_name','mc_isAdmin'].forEach(k => localStorage.removeItem(k)); }
+// ── Session ─────────────────────────────────────
+const S = {
+  get email()    { return localStorage.getItem('m_email')    || '' },
+  set email(v)   { localStorage.setItem('m_email', v) },
+  get emailKey() { return localStorage.getItem('m_key')      || '' },
+  set emailKey(v){ localStorage.setItem('m_key', v) },
+  get name()     { return localStorage.getItem('m_name')     || '' },
+  set name(v)    { localStorage.setItem('m_name', v) },
+  get isAdmin()  { return localStorage.getItem('m_admin') === '1' },
+  set isAdmin(v) { localStorage.setItem('m_admin', v ? '1' : '0') },
+  clear(){ ['m_email','m_key','m_name','m_admin'].forEach(k=>localStorage.removeItem(k)) }
 };
+const toKey = e => e.toLowerCase().trim().replace(/\./g,'_');
 
-function emailToKey(email) {
-  return email.toLowerCase().trim().replace(/\./g, '_');
-}
-
-const API = '';  // same origin — vercel serves /api/*
-
-// ── Startup ───────────────────────────────────────────────────────────────────
+// ── Init ─────────────────────────────────────────
 auth.onAuthStateChanged(async user => {
-  hideLoading();
-  if (user && session.emailKey) {
-    await openApp();
-  } else {
-    showScreen('authScreen');
-  }
+  loaderOff();
+  if (user && S.emailKey) { await openApp(); }
+  else showScreen('authScreen');
 });
 
 async function openApp() {
   showScreen('appScreen');
   showTab('home', false);
-  initChatPanel();
+  buildChatPanel();
   loadNews();
   loadServices();
   loadContacts();
@@ -589,203 +624,178 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
-function showLoading()  { document.getElementById('loadingOverlay').classList.remove('hidden'); }
+function loaderOff()  { document.getElementById('loader').classList.add('off') }
+function loaderOn()   { document.getElementById('loader').classList.remove('off') }
 
-// ── Auth: Email OTP ───────────────────────────────────────────────────────────
+// ── Auth ─────────────────────────────────────────
 let pendingEmail = '';
 
-function goToEmailStep() {
-  showAuthStep('authStepEmail');
+function gotoEmail() {
+  setStep('stepEmail');
 }
-
-function showAuthStep(id) {
-  document.querySelectorAll('.auth-step').forEach(s => s.classList.remove('active'));
+function setStep(id) {
+  document.querySelectorAll('.auth-step').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
 async function sendOtp() {
-  const email = document.getElementById('inputEmail').value.trim();
-  const errEl = document.getElementById('errEmail');
-  errEl.textContent = '';
+  const email = document.getElementById('inpEmail').value.trim();
+  const err   = document.getElementById('errEmail');
+  err.textContent = '';
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errEl.textContent = 'Введите корректный email';
-    return;
+    err.textContent = 'Введите корректный email'; return;
   }
-  showLoading();
+  loaderOn();
   try {
-    const res = await fetch('/api/send-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+    const r = await fetch('/api/send-otp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email})
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Ошибка отправки');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Ошибка');
     pendingEmail = email;
-    document.getElementById('otpHint').textContent =
-      `Код отправлен на ${email}`;
-    showAuthStep('authStepOtp');
-    document.getElementById('inputOtp').value = '';
-    document.getElementById('inputOtp').focus();
-  } catch(e) {
-    errEl.textContent = e.message;
-  } finally {
-    hideLoading();
-  }
+    document.getElementById('otpHint').textContent = 'Код отправлен на ' + email;
+    setStep('stepOtp');
+    document.getElementById('inpOtp').value = '';
+    document.getElementById('inpOtp').focus();
+  } catch(e) { err.textContent = e.message; }
+  finally { loaderOff(); }
 }
 
 async function resendOtp() {
-  if (!pendingEmail) { goToEmailStep(); return; }
-  document.getElementById('inputEmail').value = pendingEmail;
+  if (!pendingEmail) { gotoEmail(); return; }
+  document.getElementById('inpEmail').value = pendingEmail;
   await sendOtp();
 }
 
 async function verifyOtp() {
-  const code  = document.getElementById('inputOtp').value.trim();
-  const errEl = document.getElementById('errOtp');
-  errEl.textContent = '';
-  if (!code || code.length !== 6) {
-    errEl.textContent = 'Введите 6-значный код';
-    return;
-  }
-  showLoading();
+  const code = document.getElementById('inpOtp').value.trim();
+  const err  = document.getElementById('errOtp');
+  err.textContent = '';
+  if (!code || code.length !== 6) { err.textContent = 'Введите 6-значный код'; return; }
+  loaderOn();
   try {
-    const res = await fetch('/api/verify-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: pendingEmail, code })
+    const r = await fetch('/api/verify-otp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ email: pendingEmail, code })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Неверный код');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Неверный код');
 
-    // Sign in anonymously so Firestore rules work
     await auth.signInAnonymously();
-    const emailKey = emailToKey(pendingEmail);
-    session.email    = pendingEmail;
-    session.emailKey = emailKey;
+    const emailKey = toKey(pendingEmail);
+    S.email    = pendingEmail;
+    S.emailKey = emailKey;
 
-    // Check admin
     const adminDoc = await db.collection('admins').doc(emailKey).get();
-    session.isAdmin = adminDoc.exists;
+    S.isAdmin = adminDoc.exists;
 
-    // Check if registered
     const userDoc = await db.collection('users').doc(emailKey).get();
     if (userDoc.exists) {
-      session.name = userDoc.data().name || '';
+      S.name = userDoc.data().name || '';
       await openApp();
     } else {
-      hideLoading();
-      showAuthStep('authStepReg');
-      document.getElementById('inputName').focus();
+      loaderOff();
+      setStep('stepReg');
+      document.getElementById('inpName').focus();
     }
-  } catch(e) {
-    errEl.textContent = e.message;
-    hideLoading();
-  }
+  } catch(e) { err.textContent = e.message; loaderOff(); }
 }
 
 async function registerUser() {
-  const name  = document.getElementById('inputName').value.trim();
-  const errEl = document.getElementById('errReg');
-  errEl.textContent = '';
-  if (!name) { errEl.textContent = 'Введите ваше имя'; return; }
-  showLoading();
+  const name = document.getElementById('inpName').value.trim();
+  const err  = document.getElementById('errReg');
+  err.textContent = '';
+  if (!name) { err.textContent = 'Введите ваше имя'; return; }
+  loaderOn();
   try {
-    await db.collection('users').doc(session.emailKey).set({
-      emailKey: session.emailKey,
-      email:    session.email,
-      name:     name,
+    await db.collection('users').doc(S.emailKey).set({
+      emailKey: S.emailKey, email: S.email, name,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    session.name = name;
+    S.name = name;
     await openApp();
-  } catch(e) {
-    errEl.textContent = 'Ошибка: ' + e.message;
-    hideLoading();
-  }
+  } catch(e) { err.textContent = 'Ошибка: ' + e.message; loaderOff(); }
 }
 
-// ── Admin Login ───────────────────────────────────────────────────────────────
-function openAdminDialog()  { document.getElementById('adminDialog').classList.add('open'); }
-function closeAdminDialog() { document.getElementById('adminDialog').classList.remove('open'); }
+// ── Admin login ───────────────────────────────────
+function openAdminDlg()  { document.getElementById('adminDlg').classList.add('open') }
+function closeAdminDlg() { document.getElementById('adminDlg').classList.remove('open') }
 
 async function doAdminLogin() {
-  const email = document.getElementById('adminEmail').value.trim();
-  const pass  = document.getElementById('adminPassword').value;
-  const errEl = document.getElementById('adminDialogErr');
-  errEl.textContent = '';
-  if (!email || !pass) { errEl.textContent = 'Введите email и пароль'; return; }
-  showLoading();
+  const email = document.getElementById('dlgEmail').value.trim();
+  const pass  = document.getElementById('dlgPass').value;
+  const err   = document.getElementById('dlgErr');
+  err.textContent = '';
+  if (!email || !pass) { err.textContent = 'Введите email и пароль'; return; }
+  loaderOn();
   try {
     await auth.signInWithEmailAndPassword(email, pass);
-    const emailKey = emailToKey(email);
-    const adminDoc = await db.collection('admins').doc(emailKey).get();
+    const key = toKey(email);
+    const adminDoc = await db.collection('admins').doc(key).get();
     if (!adminDoc.exists) {
       await auth.signOut();
       throw new Error('Нет прав администратора');
     }
-    session.email    = email;
-    session.emailKey = emailKey;
-    session.isAdmin  = true;
-    // Ensure user doc exists
-    const userDoc = await db.collection('users').doc(emailKey).get();
-    session.name = userDoc.exists ? (userDoc.data().name || 'Администратор') : 'Администратор';
-    closeAdminDialog();
+    S.email = email; S.emailKey = key; S.isAdmin = true;
+    const ud = await db.collection('users').doc(key).get();
+    S.name = ud.exists ? (ud.data().name || 'Администратор') : 'Администратор';
+    closeAdminDlg();
     await openApp();
   } catch(e) {
-    const msgs = {
+    const map = {
       'auth/user-not-found':   'Пользователь не найден',
       'auth/wrong-password':   'Неверный пароль',
       'auth/invalid-email':    'Неверный формат email',
       'auth/too-many-requests':'Слишком много попыток',
     };
-    errEl.textContent = msgs[e.code] || e.message;
-    hideLoading();
+    err.textContent = map[e.code] || e.message;
+    loaderOff();
   }
 }
 
-// ── Logout ────────────────────────────────────────────────────────────────────
+// ── Logout ────────────────────────────────────────
 async function doLogout() {
   if (!confirm('Выйти из аккаунта?')) return;
-  stopChatListeners();
-  session.clear();
+  stopChat();
+  S.clear();
   await auth.signOut();
   showScreen('authScreen');
-  goToEmailStep();
+  gotoEmail();
 }
 
-// ── Tab Navigation ────────────────────────────────────────────────────────────
-const tabConfig = {
-  home:     { page: 'tabHome',     nav: 'navHome',     title: 'Главная' },
-  services: { page: 'tabServices', nav: 'navServices', title: 'Услуги' },
-  contacts: { page: 'tabContacts', nav: 'navContacts', title: 'Контакты' },
-  chat:     { page: 'tabChat',     nav: 'navChat',     title: 'Чат' },
+// ── Tabs ─────────────────────────────────────────
+const TABS = {
+  home:     { page:'tabHome',     nav:'navHome',     title:'Главная' },
+  services: { page:'tabServices', nav:'navServices', title:'Услуги' },
+  contacts: { page:'tabContacts', nav:'navContacts', title:'Контакты' },
+  chat:     { page:'tabChat',     nav:'navChat',     title:'Чат' },
 };
-
-let currentTab = 'home';
-
-function showTab(name, scroll = true) {
-  currentTab = name;
-  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const cfg = tabConfig[name];
-  if (!cfg) return;
-  document.getElementById(cfg.page).classList.add('active');
-  document.getElementById(cfg.nav).classList.add('active');
-  document.getElementById('topbarTitle').textContent = cfg.title;
-  if (scroll) document.getElementById(cfg.page).scrollTop = 0;
+function showTab(name, reset=true) {
+  Object.values(TABS).forEach(t => {
+    document.getElementById(t.page).classList.remove('active');
+    document.getElementById(t.nav).classList.remove('active');
+  });
+  const t = TABS[name];
+  if (!t) return;
+  document.getElementById(t.page).classList.add('active');
+  document.getElementById(t.nav).classList.add('active');
+  document.getElementById('topTitle').textContent = t.title;
+  if (reset) document.getElementById(t.page).scrollTop = 0;
 }
 
-// ── NEWS ──────────────────────────────────────────────────────────────────────
+// ── NEWS ──────────────────────────────────────────
 let allNews = [];
+const NEWS_COLORS = ['#c5e48a,#80deea','#a5d6a7,#80cbc4','#80deea,#b2ebf2','#dce775,#80deea'];
 
 function loadNews() {
-  db.collection('news').orderBy('date', 'desc').onSnapshot(snap => {
-    allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  db.collection('news').orderBy('date','desc').onSnapshot(snap => {
+    allNews = snap.docs.map(d => ({id:d.id,...d.data()}));
     renderNews();
-  }, () => {
-    db.collection('news').orderBy('date', 'desc').get().then(snap => {
-      allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }, err => {
+    console.warn(err);
+    db.collection('news').get().then(snap => {
+      allNews = snap.docs.map(d => ({id:d.id,...d.data()}));
       renderNews();
     });
   });
@@ -794,362 +804,362 @@ function loadNews() {
 function renderNews() {
   const el = document.getElementById('newsList');
   if (!allNews.length) {
-    el.innerHTML = '<div class="empty-state">📰 Новостей пока нет</div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📰</div>Новостей пока нет</div>';
     return;
   }
-  el.innerHTML = allNews.map(n => {
-    const date = n.date ? new Date(n.date.seconds * 1000).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'}) : '';
-    const img  = n.imageUrl
-      ? `<img src="${esc(n.imageUrl)}" loading="lazy" onerror="this.style.display='none'" alt="">`
+  el.innerHTML = allNews.map((n, i) => {
+    const date = n.date
+      ? new Date(n.date.seconds*1000).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'})
       : '';
-    const preview = (n.body || '').slice(0, 120);
-    const hasMore = (n.body || '').length > 120;
+    const grad = NEWS_COLORS[i % NEWS_COLORS.length];
+    const hasImg = n.imageUrl && n.imageUrl.trim();
+    const imgContent = hasImg
+      ? `<img src="${esc(n.imageUrl)}" alt="" onload="this.style.opacity=1"
+              onerror="this.remove()"
+              style="opacity:0;transition:opacity .3s">`
+      : '';
+    const prev = (n.body||'').slice(0,110);
+    const more = (n.body||'').length > 110;
     return `
-      <div class="news-card" onclick="openNewsModal('${n.id}')">
-        ${img}
+      <div class="news-card" onclick="openNews('${esc(n.id)}')">
+        <div class="news-img-wrap" style="background:linear-gradient(135deg,${grad})">
+          ${imgContent}
+          ${hasImg ? '' : '<div class="news-img-placeholder">🏥</div>'}
+        </div>
         <div class="news-card-body">
-          <div class="news-card-date">📅 ${esc(date)}</div>
+          ${date ? `<div class="news-card-date">${esc(date)}</div>` : ''}
           <div class="news-card-title">${esc(n.title)}</div>
-          <div class="news-card-preview">${esc(preview)}${hasMore ? '…' : ''}</div>
-          ${hasMore ? '<div class="news-card-more">Читать далее →</div>' : ''}
+          <div class="news-card-preview">${esc(prev)}${more?'…':''}</div>
+          ${more ? '<div class="news-read-more">Читать далее →</div>' : ''}
         </div>
       </div>`;
   }).join('');
 }
 
-function openNewsModal(id) {
-  const n = allNews.find(x => x.id === id);
-  if (!n) return;
-  const date = n.date ? new Date(n.date.seconds * 1000).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'}) : '';
-  document.getElementById('newsModalTitle').textContent = n.title || '';
-  document.getElementById('newsModalDate').textContent  = date ? '📅 ' + date : '';
-  document.getElementById('newsModalText').textContent  = n.body || '';
-  document.getElementById('newsModal').classList.add('open');
+function openNews(id) {
+  const n = allNews.find(x=>x.id===id); if (!n) return;
+  const date = n.date
+    ? new Date(n.date.seconds*1000).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'})
+    : '';
+  document.getElementById('newsTitle').textContent = n.title || '';
+  document.getElementById('newsDate').textContent  = date ? '📅 ' + date : '';
+  document.getElementById('newsBody').textContent  = n.body || '';
+  document.getElementById('newsOverlay').classList.add('open');
 }
+function closeNews() { document.getElementById('newsOverlay').classList.remove('open') }
 
-function closeNewsModal() {
-  document.getElementById('newsModal').classList.remove('open');
-}
-
-// ── SERVICES ──────────────────────────────────────────────────────────────────
-let allServices   = [];
-let activeFilter  = 'all';
+// ── SERVICES ─────────────────────────────────────
+let allSvc = [], activeChip = 'all';
 
 function loadServices() {
   db.collection('services').orderBy('category').onSnapshot(snap => {
-    allServices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderChips();
-    renderServices();
+    allSvc = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderChips(); renderSvc();
   }, () => {
     db.collection('services').get().then(snap => {
-      allServices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderChips();
-      renderServices();
+      allSvc = snap.docs.map(d => ({id:d.id,...d.data()}));
+      renderChips(); renderSvc();
     });
   });
 }
-
 function renderChips() {
-  const cats = ['all', ...new Set(allServices.map(s => s.category).filter(Boolean))];
-  document.getElementById('chipsRow').innerHTML = cats.map(c =>
-    `<button class="chip ${activeFilter===c?'active':''}"
-      onclick="setFilter('${esc(c)}')">${c === 'all' ? 'Все' : esc(c)}</button>`
-  ).join('');
+  const cats = [...new Set(allSvc.map(s=>s.category).filter(Boolean))];
+  document.getElementById('chipsBar').innerHTML =
+    ['all',...cats].map(c =>
+      `<button class="chip ${activeChip===c?'active':''}" onclick="setChip('${esc(c)}')">${c==='all'?'Все':esc(c)}</button>`
+    ).join('');
 }
+function setChip(c) { activeChip=c; renderChips(); renderSvc(); }
+function renderSvc() {
+  const list = activeChip==='all' ? allSvc : allSvc.filter(s=>s.category===activeChip);
+  const el = document.getElementById('svcList');
+  if (!list.length) { el.innerHTML='<div class="empty">Услуг не найдено</div>'; return; }
 
-function setFilter(cat) {
-  activeFilter = cat;
-  renderChips();
-  renderServices();
-}
-
-function renderServices() {
-  const filtered = activeFilter === 'all'
-    ? allServices
-    : allServices.filter(s => s.category === activeFilter);
-  const el = document.getElementById('servicesList');
-  if (!filtered.length) {
-    el.innerHTML = '<div class="empty-state">Услуг не найдено</div>';
-    return;
+  // Group by category
+  if (activeChip === 'all') {
+    const groups = {};
+    list.forEach(s => { (groups[s.category||'Прочее'] = groups[s.category||'Прочее']||[]).push(s) });
+    el.innerHTML = Object.entries(groups).map(([cat, items]) => `
+      <div class="svc-group-header">${esc(cat)}</div>
+      <div style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:4px">
+        ${items.map(s=>`
+          <div class="svc-card">
+            <div class="svc-name">${esc(s.name)}</div>
+            <div class="svc-meta">
+              ${s.price    ? `<span class="pill pill-price">💰 ${esc(s.price)}</span>` : ''}
+              ${s.duration ? `<span class="pill pill-dur">⏱ ${esc(s.duration)}</span>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+  } else {
+    el.innerHTML = `
+      <div style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1);">
+        ${list.map(s=>`
+          <div class="svc-card">
+            <div class="svc-name">${esc(s.name)}</div>
+            <div class="svc-meta">
+              ${s.price    ? `<span class="pill pill-price">💰 ${esc(s.price)}</span>` : ''}
+              ${s.duration ? `<span class="pill pill-dur">⏱ ${esc(s.duration)}</span>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>`;
   }
-  el.innerHTML = filtered.map(s => `
-    <div class="service-card">
-      <div class="service-name">${esc(s.name)}</div>
-      <div class="service-meta">
-        ${s.price    ? `<span class="badge badge-price">💰 ${esc(s.price)}</span>` : ''}
-        ${s.duration ? `<span class="badge badge-duration">⏱ ${esc(s.duration)}</span>` : ''}
-        ${s.category ? `<span class="badge badge-cat">${esc(s.category)}</span>` : ''}
-      </div>
-    </div>`).join('');
 }
 
-// ── CONTACTS ──────────────────────────────────────────────────────────────────
+// ── CONTACTS ─────────────────────────────────────
 function loadContacts() {
-  db.collection('app_settings').doc('contact').get().then(doc => {
-    const d = doc.exists ? doc.data() : {};
-    renderContacts(d);
-  }).catch(() => renderContacts({}));
+  db.collection('app_settings').doc('contact').get()
+    .then(doc => renderContacts(doc.exists ? doc.data() : {}))
+    .catch(()  => renderContacts({}));
 }
-
 function renderContacts(d) {
-  const phone1   = d.phone1   || '+7 (930) 754-02-04';
-  const phone2   = d.phone2   || '+7 (4842) 40-02-04';
-  const email    = d.email    || 'kaluga.8za@gmail.com';
-  const address  = d.address  || 'г. Калуга, ул. Ленина, д. 1';
-  const hours    = d.hours    || 'Пн–Чт: 10:00–19:00\nПт–Сб: выходной\nВс: 10:00–19:00';
-  const about    = d.about    || '';
+  const ph1  = d.phone1   || '+7 (930) 754-02-04';
+  const ph2  = d.phone2   || '+7 (4842) 40-02-04';
+  const em   = d.email    || 'kaluga.8za@gmail.com';
+  const addr = d.address  || 'г. Калуга, ул. Ленина, д. 1';
+  const hrs  = d.hours    || 'Пн–Чт: 10:00–19:00\nПт–Сб: выходной\nВс: 10:00–19:00';
+  const about= d.about    || '';
 
-  const adminHtml = session.isAdmin ? `
-    <div class="admin-card-info visible">
-      <div class="admin-card-title">⚙ Панель администратора</div>
-      <div class="admin-card-desc">Управление услугами, новостями и чатами</div>
-      <button class="btn-action btn-call" onclick="window.open('https://massagecentr-admin.vercel.app/admin','_blank')">
+  const adminBlock = S.isAdmin ? `
+    <div class="admin-banner show">
+      <div class="admin-banner-title">⚙ Панель администратора</div>
+      <div class="admin-banner-sub">Управление услугами, новостями и чатами</div>
+      <button class="btn-act btn-act-g" onclick="window.open('https://massagecentr-admin.vercel.app/admin','_blank')">
         🔧 Открыть панель
       </button>
     </div>` : '';
 
-  document.getElementById('infoScroll').innerHTML = `
-    ${adminHtml}
-    ${about ? `<div class="info-card"><div class="info-card-title">О центре</div>
-      <div class="info-text" style="font-size:14px;line-height:1.6">${esc(about)}</div></div>` : ''}
-    <div class="info-card">
-      <div class="info-card-title">📞 Контакты</div>
+  const aboutBlock = about ? `
+    <div class="info-section">
+      <div class="info-section-title" style="padding-bottom:8px">О центре</div>
+      <div style="padding:0 16px 14px;font-size:14px;line-height:1.6;color:#333">${esc(about)}</div>
+    </div>` : '';
+
+  document.getElementById('infoWrap').innerHTML = `
+    ${adminBlock}
+    ${aboutBlock}
+    <div class="info-section">
+      <div class="info-section-title">Телефоны</div>
       <div class="info-row">
-        <span class="info-icon">📱</span>
-        <span class="info-text"><a href="tel:${esc(phone1)}">${esc(phone1)}</a></span>
+        <div class="info-icon">📱</div>
+        <div class="info-text-wrap">
+          <div class="info-label">Мобильный</div>
+          <div class="info-val"><a href="tel:${esc(ph1)}">${esc(ph1)}</a></div>
+        </div>
       </div>
       <div class="info-row">
-        <span class="info-icon">☎️</span>
-        <span class="info-text"><a href="tel:${esc(phone2)}">${esc(phone2)}</a></span>
+        <div class="info-icon">☎️</div>
+        <div class="info-text-wrap">
+          <div class="info-label">Городской</div>
+          <div class="info-val"><a href="tel:${esc(ph2)}">${esc(ph2)}</a></div>
+        </div>
       </div>
       <div class="info-row">
-        <span class="info-icon">✉️</span>
-        <span class="info-text"><a href="mailto:${esc(email)}">${esc(email)}</a></span>
+        <div class="info-icon">✉️</div>
+        <div class="info-text-wrap">
+          <div class="info-label">Email</div>
+          <div class="info-val"><a href="mailto:${esc(em)}">${esc(em)}</a></div>
+        </div>
       </div>
-      <button class="btn-action btn-call" onclick="window.location='tel:${esc(phone1)}'">
-        📞 Позвонить
-      </button>
-      <button class="btn-action btn-email-action" style="margin-top:8px" onclick="window.location='mailto:${esc(email)}'">
-        ✉️ Написать письмо
-      </button>
+      <div class="info-actions">
+        <button class="btn-act btn-act-g" onclick="window.location='tel:${esc(ph1)}'">📞 Позвонить</button>
+        <button class="btn-act btn-act-o" onclick="window.location='mailto:${esc(em)}'">✉️ Написать</button>
+      </div>
     </div>
-    <div class="info-card">
-      <div class="info-card-title">📍 Адрес</div>
+    <div class="info-section">
+      <div class="info-section-title">Адрес</div>
       <div class="info-row">
-        <span class="info-icon">🏥</span>
-        <span class="info-text">${esc(address)}</span>
+        <div class="info-icon">📍</div>
+        <div class="info-text-wrap">
+          <div class="info-label">Местоположение</div>
+          <div class="info-val">${esc(addr)}</div>
+        </div>
       </div>
-      <button class="btn-action btn-map"
-        onclick="window.open('https://yandex.ru/maps/?text=${encodeURIComponent(address)}','_blank')">
-        🗺 Открыть на карте
-      </button>
+      <div class="info-actions">
+        <button class="btn-act btn-act-t"
+          onclick="window.open('https://yandex.ru/maps/?text=${encodeURIComponent(addr)}','_blank')">
+          🗺 Открыть на карте
+        </button>
+      </div>
     </div>
-    <div class="info-card">
-      <div class="info-card-title">🕐 Часы работы</div>
-      <div class="hours-text">${esc(hours)}</div>
+    <div class="info-section">
+      <div class="info-section-title">Часы работы</div>
+      <div class="hours-pre">${esc(hrs)}</div>
     </div>`;
 }
 
-// ── CHAT ──────────────────────────────────────────────────────────────────────
-let chatUnsub      = null;
-let convUnsub      = null;
-let activeChatKey  = null;
+// ── CHAT ─────────────────────────────────────────
+let chatSub = null, convSub = null, activeCKey = null;
 
-function stopChatListeners() {
-  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
-  if (convUnsub) { convUnsub(); convUnsub = null; }
+function stopChat() {
+  if (chatSub) { chatSub(); chatSub = null; }
+  if (convSub) { convSub(); convSub = null; }
 }
 
-function initChatPanel() {
+function buildChatPanel() {
   const wrap = document.getElementById('chatWrap');
-  if (session.isAdmin) {
-    // Admin: split view
+  if (S.isAdmin) {
     wrap.innerHTML = `
-      <div class="conv-list" id="convList"><div class="spinner">Загрузка…</div></div>
+      <div class="conv-panel" id="convPanel">
+        <div class="conv-hdr">Клиенты</div>
+        <div id="convList"><div class="spinner" style="font-size:12px;padding:20px">Загрузка…</div></div>
+      </div>
       <div class="chat-single" id="chatSingle">
-        <div class="chat-empty-msg">← Выберите клиента из списка</div>
-      </div>`;
-    loadConversations();
-  } else {
-    // Client: single chat
-    wrap.innerHTML = `
-      <div class="chat-single" id="chatSingle">
-        <div class="chat-messages" id="chatMessages"><div class="spinner">Загрузка…</div></div>
-        <div class="chat-input-bar">
-          <textarea id="chatInput" class="chat-textarea" placeholder="Введите сообщение…" rows="1"
-            oninput="autoResize(this)"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendClientMessage();}"></textarea>
-          <button class="btn-send" onclick="sendClientMessage()">➤</button>
+        <div class="chat-empty">
+          <div class="chat-empty-icon">💬</div>
+          <div class="chat-empty-txt">Выберите клиента</div>
         </div>
       </div>`;
-    loadClientMessages();
+    loadConvs();
+  } else {
+    wrap.innerHTML = `
+      <div class="chat-single" id="chatSingle">
+        <div class="chat-messages" id="chatMsgs">
+          <div class="chat-empty">
+            <div class="chat-empty-icon">💬</div>
+            <div class="chat-empty-txt">Напишите нам — мы ответим!</div>
+          </div>
+        </div>
+        <div class="chat-bar">
+          <textarea id="chatTa" class="chat-ta" placeholder="Введите сообщение…" rows="1"
+            oninput="grow(this)"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+          <button class="btn-send" onclick="sendMsg()">➤</button>
+        </div>
+      </div>`;
+    loadMyMsgs();
   }
 }
 
-// ── Client chat ──────────────────────────────────────────────────────────────
-function loadClientMessages() {
-  const key = session.emailKey;
-  if (!key) return;
-  stopChatListeners();
-  chatUnsub = db.collection('chats').doc(key).collection('messages')
+function loadMyMsgs() {
+  const key = S.emailKey; if (!key) return;
+  stopChat();
+  chatSub = db.collection('chats').doc(key).collection('messages')
     .orderBy('timestamp').onSnapshot(snap => {
-      const el = document.getElementById('chatMessages');
-      if (!el) return;
+      const el = document.getElementById('chatMsgs'); if (!el) return;
       if (!snap.docs.length) {
-        el.innerHTML = '<div class="chat-empty-msg">Напишите нам — мы ответим!</div>';
+        el.innerHTML='<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-txt">Напишите нам — мы ответим!</div></div>';
         return;
       }
       el.innerHTML = snap.docs.map(d => {
         const m = d.data();
-        const time = m.timestamp
-          ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})
-          : '';
-        const isAdmin = m.role === 'admin';
-        return `
-          <div class="msg ${isAdmin ? 'msg-in' : 'msg-out'}">
-            ${isAdmin ? '<div class="msg-label">Администратор</div>' : ''}
-            ${esc(m.text)}
-            <div class="msg-time">${time}</div>
-          </div>`;
+        const t = m.timestamp ? new Date(m.timestamp.seconds*1000).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) : '';
+        const isA = m.role==='admin';
+        return `<div class="bubble ${isA?'bubble-in':'bubble-out'}">
+          ${isA?'<div class="bubble-label">Администратор</div>':''}
+          ${esc(m.text)}<div class="bubble-time">${t}</div>
+        </div>`;
       }).join('');
       el.scrollTop = el.scrollHeight;
     });
 }
 
-async function sendClientMessage() {
-  const ta   = document.getElementById('chatInput');
-  const text = ta.value.trim();
-  if (!text) return;
-  const key = session.emailKey;
-  ta.value = '';
-  autoResize(ta);
+async function sendMsg() {
+  const ta = document.getElementById('chatTa');
+  const text = ta.value.trim(); if (!text) return;
+  const key = S.emailKey;
+  ta.value = ''; grow(ta);
   try {
-    const ts = firebase.firestore.FieldValue.serverTimestamp();
     await db.collection('chats').doc(key).collection('messages').add({
-      text, role: 'client',
-      senderId:  auth.currentUser?.uid || key,
-      timestamp: ts
+      text, role:'client',
+      senderId: auth.currentUser?.uid || key,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-    // Create/update parent doc so admin panel detects conversation
     await db.collection('chats').doc(key).set({
-      lastMessage:   text,
+      lastMessage: text,
       lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      userKey:       key,
-      userName:      session.name || session.email,
-      userEmail:     session.email
-    }, { merge: true });
-  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+      userKey: key, userName: S.name || S.email, userEmail: S.email
+    }, {merge:true});
+  } catch(e) { toast('Ошибка: '+e.message,'err'); }
 }
 
-// ── Admin chat ───────────────────────────────────────────────────────────────
-function loadConversations() {
-  if (convUnsub) convUnsub();
-  convUnsub = db.collection('chats').onSnapshot(async snap => {
-    const convEl = document.getElementById('convList');
-    if (!convEl) return;
+function loadConvs() {
+  if (convSub) convSub();
+  convSub = db.collection('chats').onSnapshot(snap => {
+    const list = document.getElementById('convList'); if (!list) return;
     if (!snap.docs.length) {
-      convEl.innerHTML = '<div class="empty-state" style="font-size:12px;padding:20px">Нет сообщений</div>';
-      return;
+      list.innerHTML='<div class="empty" style="font-size:12px;padding:16px">Нет сообщений</div>'; return;
     }
-    const convs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (b.lastTimestamp?.seconds || 0) - (a.lastTimestamp?.seconds || 0));
-    convEl.innerHTML = convs.map(c => `
-      <div class="conv-item ${activeChatKey === c.id ? 'active' : ''}"
-           onclick="openAdminChat('${esc(c.id)}','${esc(c.userName||c.id)}','${esc(c.userEmail||'')}')">
-        <div class="conv-name">${esc(c.userName || c.id)}</div>
-        <div class="conv-email">${esc(c.userEmail || c.id)}</div>
-        <div class="conv-preview">${esc(c.lastMessage || '')}</div>
+    const convs = snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.lastTimestamp?.seconds||0)-(a.lastTimestamp?.seconds||0));
+    list.innerHTML = convs.map(c=>`
+      <div class="conv-item ${activeCKey===c.id?'active':''}"
+           onclick="openConv('${esc(c.id)}','${esc(c.userName||c.id)}','${esc(c.userEmail||c.id)}')">
+        <div class="conv-name">${esc(c.userName||c.id)}</div>
+        <div class="conv-email">${esc(c.userEmail||'')}</div>
+        <div class="conv-prev">${esc(c.lastMessage||'')}</div>
       </div>`).join('');
   });
 }
 
-function openAdminChat(key, name, email) {
-  activeChatKey = key;
-  // Re-render conv list to highlight active
-  document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+function openConv(key, name, email) {
+  activeCKey = key;
+  document.querySelectorAll('.conv-item').forEach(el=>el.classList.remove('active'));
   event.currentTarget.classList.add('active');
-
   const single = document.getElementById('chatSingle');
   single.innerHTML = `
-    <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:#fafff5;flex-shrink:0">
+    <div style="padding:10px 14px 9px;border-bottom:1px solid var(--divider);background:#fafff5;flex-shrink:0">
       <div style="font-size:14px;font-weight:700">${esc(name)}</div>
-      <div style="font-size:12px;color:var(--text-hint)">${esc(email)}</div>
+      <div style="font-size:11px;color:var(--hint)">${esc(email)}</div>
     </div>
-    <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-input-bar">
-      <textarea id="chatInput" class="chat-textarea" placeholder="Ответить клиенту…" rows="1"
-        oninput="autoResize(this)"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminMessage('${esc(key)}');}"></textarea>
-      <button class="btn-send" onclick="sendAdminMessage('${esc(key)}')">➤</button>
+    <div class="chat-messages" id="chatMsgs"></div>
+    <div class="chat-bar">
+      <textarea id="chatTa" class="chat-ta" placeholder="Ответить клиенту…" rows="1"
+        oninput="grow(this)"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdm('${esc(key)}');}"></textarea>
+      <button class="btn-send" onclick="sendAdm('${esc(key)}')">➤</button>
     </div>`;
-
-  if (chatUnsub) chatUnsub();
-  chatUnsub = db.collection('chats').doc(key).collection('messages')
+  if (chatSub) chatSub();
+  chatSub = db.collection('chats').doc(key).collection('messages')
     .orderBy('timestamp').onSnapshot(snap => {
-      const el = document.getElementById('chatMessages');
-      if (!el) return;
-      if (!snap.docs.length) {
-        el.innerHTML = '<div class="chat-empty-msg">Нет сообщений</div>';
-        return;
-      }
+      const el = document.getElementById('chatMsgs'); if (!el) return;
+      if (!snap.docs.length) { el.innerHTML='<div class="chat-empty"><div class="chat-empty-txt">Нет сообщений</div></div>'; return; }
       el.innerHTML = snap.docs.map(d => {
         const m = d.data();
-        const time = m.timestamp
-          ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})
-          : '';
-        const isAdmin = m.role === 'admin';
-        return `
-          <div class="msg ${isAdmin ? 'msg-in' : 'msg-out'}">
-            <div class="msg-label">${isAdmin ? 'Администратор' : esc(name)}</div>
-            ${esc(m.text)}
-            <div class="msg-time">${time}</div>
-          </div>`;
+        const t = m.timestamp ? new Date(m.timestamp.seconds*1000).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) : '';
+        const isA = m.role==='admin';
+        return `<div class="bubble ${isA?'bubble-in':'bubble-out'}">
+          <div class="bubble-label">${isA?'Администратор':esc(name)}</div>
+          ${esc(m.text)}<div class="bubble-time">${t}</div>
+        </div>`;
       }).join('');
       el.scrollTop = el.scrollHeight;
     });
 }
 
-async function sendAdminMessage(key) {
-  const ta   = document.getElementById('chatInput');
-  const text = ta.value.trim();
-  if (!text) return;
-  ta.value = '';
-  autoResize(ta);
+async function sendAdm(key) {
+  const ta = document.getElementById('chatTa');
+  const text = ta.value.trim(); if (!text) return;
+  ta.value=''; grow(ta);
   try {
     await db.collection('chats').doc(key).collection('messages').add({
-      text, role: 'admin',
-      senderId:  auth.currentUser?.uid || 'admin',
+      text, role:'admin',
+      senderId: auth.currentUser?.uid || 'admin',
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
     await db.collection('chats').doc(key).set({
-      lastMessage:   '✓ ' + text,
+      lastMessage:'✓ '+text,
       lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    },{merge:true});
+  } catch(e) { toast('Ошибка: '+e.message,'err'); }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+// ── Utils ─────────────────────────────────────────
+function grow(el) {
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,100)+'px';
 }
-
-function toast(msg, type = '') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className   = type ? `show ${type}` : 'show';
-  clearTimeout(el._t);
-  el._t = setTimeout(() => { el.className = ''; }, 3000);
+function toast(msg, type='') {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=type?`show ${type}`:'show';
+  clearTimeout(el._t); el._t=setTimeout(()=>el.className='',3000);
 }
-
 function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Service Worker ────────────────────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
-}
+// ── SW ────────────────────────────────────────────
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
 </html>
