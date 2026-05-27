@@ -15,8 +15,10 @@ local.properties
 
 # Node
 node_modules/
+functions/node_modules/
 npm-debug.log
 package-lock.json
+functions/package-lock.json
 
 # Secrets — никогда не коммитить!
 serviceAccountKey.json

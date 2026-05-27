@@ -29,7 +29,7 @@ class PhoneAuthFragment : Fragment() {
         viewModel.initCallbacks()
 
         binding.btnGetCode.setOnClickListener {
-            viewModel.sendCode(binding.etPhone.text.toString(), requireActivity())
+            viewModel.sendCode(binding.etEmail.text.toString(), requireActivity())
         }
 
         binding.btnVerify.setOnClickListener {
@@ -57,9 +57,9 @@ class PhoneAuthFragment : Fragment() {
                 binding.layoutCode.isVisible = true
                 binding.btnVerify.isVisible = true
                 binding.btnResend.isVisible = true
-                binding.tvStatus.text = "✓ Код отправлен на ${state.phone}"
+                binding.tvStatus.text = "✓ Код отправлен на ${state.email}"
                 binding.tvStatus.isVisible = true
-                binding.btnGetCode.text = "Отправить новый код"
+                binding.btnGetCode.text = "Отправить повторно"
             }
             is AuthState.NeedRegistration -> {
                 findNavController().navigate(R.id.action_phoneAuth_to_nameRegistration)
@@ -70,6 +70,9 @@ class PhoneAuthFragment : Fragment() {
             is AuthState.Error -> {
                 binding.tvStatus.text = state.message
                 binding.tvStatus.isVisible = true
+                binding.tvStatus.setTextColor(
+                    requireContext().getColor(android.R.color.holo_red_dark)
+                )
             }
             else -> {
                 binding.tvStatus.isVisible = false

@@ -2,14 +2,14 @@
     <string name="app_name">Массажный центр</string>
 
     <!-- Auth -->
-    <string name="phone_auth_title">Вход по номеру телефона</string>
-    <string name="phone_auth_hint">Введите номер в формате +7XXXXXXXXXX</string>
-    <string name="phone_hint">Номер телефона</string>
-    <string name="phone_placeholder">+79001234567</string>
+    <string name="email_auth_title">Вход по email</string>
+    <string name="email_auth_subtitle">Введите email — придёт письмо с кодом</string>
+    <string name="email_hint">Email-адрес</string>
     <string name="get_code">Получить код</string>
-    <string name="sms_code_hint">Код из SMS</string>
+    <string name="enter_email_code">Введите код из письма</string>
+    <string name="email_code_hint">6-значный код</string>
     <string name="verify_code">Войти</string>
-    <string name="resend_code">Не пришёл код? Отправить ещё раз</string>
+    <string name="resend_code">Не пришло письмо? Отправить ещё раз</string>
     <string name="registration_title">Регистрация</string>
     <string name="name_hint">Ваше имя</string>
     <string name="name_placeholder">Иван Иванов</string>
@@ -48,6 +48,9 @@
     <string name="open_map">Открыть на карте</string>
     <string name="hours_title">Часы работы</string>
     <string name="hours">Пн–Чт: 10:00 – 19:00\nПт–Сб: выходной\nВс: 10:00 – 19:00</string>
+
+    <!-- Profile / Logout -->
+    <string name="action_logout">Выйти из аккаунта</string>
 
     <!-- Chat -->
     <string name="chat_title">Чат</string>

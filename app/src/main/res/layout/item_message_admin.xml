@@ -19,6 +19,15 @@
         android:maxWidth="260dp">
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Администратор"
+            android:textSize="11sp"
+            android:textColor="@color/primary"
+            android:textStyle="bold"
+            android:layout_marginBottom="2dp" />
+
+        <TextView
             android:id="@+id/tvMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -33,5 +42,6 @@
             android:textSize="11sp"
             android:textColor="@color/text_secondary"
             android:layout_gravity="end" />
+
     </LinearLayout>
 </LinearLayout>

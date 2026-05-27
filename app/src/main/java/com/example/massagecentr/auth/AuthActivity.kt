@@ -22,7 +22,8 @@ class AuthActivity : AppCompatActivity() {
 
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
-            viewModel.checkUser(currentUser.uid, currentUser.phoneNumber.orEmpty())
+            // Анонимная сессия сохранена на устройстве → проверяем профиль
+            viewModel.checkUser(currentUser.uid, "")
             viewModel.state.observe(this) { state ->
                 if (state is AuthState.LoggedIn) openMain()
             }

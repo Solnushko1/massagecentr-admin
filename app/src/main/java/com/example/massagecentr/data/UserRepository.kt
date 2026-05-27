@@ -13,10 +13,10 @@ class UserRepository {
         return if (doc.exists()) doc.toObject(User::class.java) else null
     }
 
-    suspend fun saveUser(uid: String, phoneNumber: String, name: String) {
+    suspend fun saveUser(uid: String, email: String, name: String) {
         val user = hashMapOf(
             "uid" to uid,
-            "phoneNumber" to phoneNumber,
+            "email" to email,
             "name" to name,
             "createdAt" to Timestamp.now()
         )

@@ -24,7 +24,7 @@ class NameRegistrationFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.tvPhone.text = "Номер: ${viewModel.getCurrentPhone()}"
+        binding.tvPhone.text = "Email: ${viewModel.getCurrentEmail()}"
 
         binding.btnRegister.setOnClickListener {
             viewModel.registerUser(binding.etName.text.toString())
